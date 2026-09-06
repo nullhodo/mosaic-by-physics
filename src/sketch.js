@@ -325,9 +325,13 @@ export function renderSceneIn2D(p) {
       graphicsData.cachedCurvature = curvatureRatio;
     }
 
+    const gapPercent = simulationState.pieceGapPercent ?? 12;
+    const gapScale = Math.max(0.3, 1.0 - (gapPercent / 100) * 0.45);
+
     p.push();
     p.translate(body.position.x, body.position.y);
     p.rotate(body.angle);
+    p.scale(gapScale);
 
     p.fill(graphicsData.fillColor);
     p.stroke(255, 255, 255, 45);
@@ -373,11 +377,15 @@ export function renderSceneIn3D(p) {
 
     graphicsData.rotationZ3D += graphicsData.rotationSpeed3D;
 
+    const gapPercent = simulationState.pieceGapPercent ?? 12;
+    const gapScale = Math.max(0.3, 1.0 - (gapPercent / 100) * 0.45);
+
     p.push();
     p.translate(body.position.x, body.position.y, 0);
     p.rotateZ(body.angle);
     p.rotateX(Math.sin(graphicsData.rotationZ3D) * 0.35);
     p.rotateY(Math.cos(graphicsData.rotationZ3D) * 0.35);
+    p.scale(gapScale);
 
     const colorRgb = convertHexToRgbArray(graphicsData.fillColor);
     p.fill(colorRgb[0], colorRgb[1], colorRgb[2]);

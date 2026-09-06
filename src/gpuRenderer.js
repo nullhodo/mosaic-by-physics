@@ -1,3 +1,5 @@
+import { simulationState } from "./state.js";
+
 /**
  * 凸多角形の角を曲率に応じて有機的かつ正確に丸めるChaikinアルゴリズム
  * (大サイズでも角ばらない高精度な多重反復スムージング)
@@ -364,10 +366,14 @@ export function renderMosaicPiecesGpu(
     const cosA = Math.cos(angle);
     const sinA = Math.sin(angle);
 
+    // ピースの隙間 (目地) スケーリング: 0%で完全密着、%が上がるほど適度な隙間を確保
+    const gapPercent = simulationState.pieceGapPercent ?? 12;
+    const gapScale = Math.max(0.3, 1.0 - (gapPercent / 100) * 0.45);
+
     // 1. 三角形ファン頂点をワールド座標に変換してパック
     for (let t = 0; t < triLen; t += 2) {
-      const lx = localTriangles[t];
-      const ly = localTriangles[t + 1];
+      const lx = localTriangles[t] * gapScale;
+      const ly = localTriangles[t + 1] * gapScale;
 
       fillVertexArray[fillOffset++] = posX + lx * cosA - ly * sinA;
       fillVertexArray[fillOffset++] = posY + lx * sinA + ly * cosA;
@@ -379,8 +385,8 @@ export function renderMosaicPiecesGpu(
 
     // 2. 輪郭線頂点をワールド座標に変換してパック
     for (let e = 0; e < edgeLen; e += 2) {
-      const lx = localEdges[e];
-      const ly = localEdges[e + 1];
+      const lx = localEdges[e] * gapScale;
+      const ly = localEdges[e + 1] * gapScale;
 
       lineVertexArray[lineOffset++] = posX + lx * cosA - ly * sinA;
       lineVertexArray[lineOffset++] = posY + lx * sinA + ly * cosA;

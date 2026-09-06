@@ -73,9 +73,13 @@ export function exportHighResolutionComposition() {
 
     const curvatureRatio = simulationState.shapeCurvaturePercent / 100;
 
+    const gapPercent = simulationState.pieceGapPercent ?? 12;
+    const gapScale = Math.max(0.3, 1.0 - (gapPercent / 100) * 0.45);
+
     exportGraphics.push();
     exportGraphics.translate(body.position.x, body.position.y);
     exportGraphics.rotate(body.angle);
+    exportGraphics.scale(gapScale);
 
     if (simulationState.isShadowActive) {
       exportGraphics.noStroke();
@@ -178,8 +182,14 @@ export function exportSvgComposition() {
     const posX = body.position.x.toFixed(2);
     const posY = body.position.y.toFixed(2);
 
+    const gapPercent = simulationState.pieceGapPercent ?? 12;
+    const gapScale = Math.max(
+      0.3,
+      1.0 - (gapPercent / 100) * 0.45,
+    ).toFixed(3);
+
     svgParts.push(
-      `  <g transform="translate(${posX}, ${posY}) rotate(${angleDeg})">`,
+      `  <g transform="translate(${posX}, ${posY}) rotate(${angleDeg}) scale(${gapScale})">`,
     );
 
     // ドロップシャドウ

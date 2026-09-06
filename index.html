@@ -267,6 +267,17 @@
           <input type="range" id="restitution-slider" min="0" max="95" value="30" class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-sky-500">
         </div>
 
+        <!-- Piece Gap (Spacing) -->
+        <div class="space-y-1">
+          <div class="flex justify-between items-center text-slate-600 text-[11px]">
+            <span class="has-tooltip cursor-help">ピースの隙間 (目地)
+              <span class="tooltip-content">0%で物理演算どおり密着・接触、数値を上げると均等な隙間（目地）を広げます</span>
+            </span>
+            <span id="piece-gap-val" class="font-mono text-slate-800 font-semibold">12%</span>
+          </div>
+          <input type="range" id="piece-gap-slider" min="0" max="40" value="12" class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-sky-500">
+        </div>
+
         <!-- Sine Wave Spawn Option -->
         <div class="pt-2 border-t border-slate-100 flex items-center justify-between">
           <span class="has-tooltip cursor-help text-slate-600 text-[11px] flex items-center gap-1.5">

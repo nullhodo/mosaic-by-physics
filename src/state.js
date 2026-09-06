@@ -11,6 +11,7 @@ export const simulationState = {
   floorOffsetDistance: -20,
   gravityForce: 1.0,
   restitutionCoeff: 0.3,
+  pieceGapPercent: 12,
   isSineWaveSpawnActive: true,
   activePaletteIndex: 1,
   backgroundColorHex: "#dedede",

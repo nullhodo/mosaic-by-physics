@@ -606,6 +606,15 @@ export function setupUIEventListeners() {
     runMosaicProcessAndBake();
   });
 
+  // ピースの隙間 (目地) - リアルタイム反映
+  safeAddEventListener("piece-gap-slider", "input", (e) => {
+    const val = Number.parseInt(e.target.value, 10);
+    simulationState.pieceGapPercent = val;
+    const valElem = document.getElementById("piece-gap-val");
+    if (valElem) valElem.innerText = `${val}%`;
+    markStaticLayerDirty();
+  });
+
   // 正弦波スイング投入
   safeAddEventListener("sine-wave-spawn-toggle", "change", (e) => {
     simulationState.isSineWaveSpawnActive = e.target.checked;
@@ -700,5 +709,12 @@ export function applyStateFromJsonObject(stateObj) {
   const sineToggle = document.getElementById("sine-wave-spawn-toggle");
   if (sineToggle && simulationState.isSineWaveSpawnActive !== undefined) {
     sineToggle.checked = simulationState.isSineWaveSpawnActive;
+  }
+
+  const gapSlider = document.getElementById("piece-gap-slider");
+  if (gapSlider && simulationState.pieceGapPercent !== undefined) {
+    gapSlider.value = simulationState.pieceGapPercent;
+    const gVal = document.getElementById("piece-gap-val");
+    if (gVal) gVal.innerText = `${simulationState.pieceGapPercent}%`;
   }
 }

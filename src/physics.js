@@ -703,9 +703,9 @@ export async function bakeMosaicPhysics(onProgress = null) {
         }
 
         // ヘッドレスベイクは円形コライダーで実行
-        // 描画ポリゴンがはみ出して重なるのを防ぐため、コライダー半径に安全マージン (1.05倍) を確保
-        // 高荷重下の痙攣・めり込みを防ぐため反発係数ゼロ・低スロップ・高減衰を適用
-        const colliderRadius = desc.radius * 1.05;
+        // 描画ポリゴンの実効外接半径 (0.88倍) にコライダーを正確に合わせることで、
+        // 物理演算通り外周が「ピタッと接するところで止まる」接触境界を実現
+        const colliderRadius = desc.radius * 0.88;
         const body = Matter.Bodies.circle(
           desc.spawnX,
           desc.spawnY,
