@@ -19,17 +19,17 @@
   <!-- Custom Stylesheet -->
   <link rel="stylesheet" href="./src/style.css">
 </head>
-<body class="relative bg-slate-950">
+<body class="relative bg-[#dedede] text-slate-800">
   <div id="canvas-container"></div>
 
   <!-- Toast Notification Message Box -->
-  <div id="toast-message" class="fixed top-5 right-5 z-50 transform translate-y-[-20px] opacity-0 transition-all duration-300 pointer-events-none bg-slate-900/90 backdrop-blur-md border border-slate-700/60 text-slate-100 text-xs px-4 py-2.5 rounded-lg shadow-2xl flex items-center gap-2">
-    <i id="toast-icon" class="fa-solid fa-circle-info text-sky-400"></i>
+  <div id="toast-message" class="fixed top-5 right-5 z-50 transform translate-y-[-20px] opacity-0 transition-all duration-300 pointer-events-none bg-white/95 backdrop-blur-md border border-slate-200 text-slate-800 text-xs px-4 py-2.5 rounded-lg shadow-xl flex items-center gap-2">
+    <i id="toast-icon" class="fa-solid fa-circle-info text-sky-500"></i>
     <span id="toast-text">通知メッセージ</span>
   </div>
 
   <!-- Recording Status HUD -->
-  <div id="recording-hud" class="fixed top-5 left-1/2 transform -translate-x-1/2 z-40 hidden flex items-center gap-3 bg-red-950/80 backdrop-blur-md border border-red-500/40 text-red-200 px-4 py-2 rounded-full shadow-lg animate-pulse text-xs font-mono">
+  <div id="recording-hud" class="fixed top-5 left-1/2 transform -translate-x-1/2 z-40 hidden flex items-center gap-3 bg-white/95 backdrop-blur-md border border-red-400 text-red-600 px-4 py-2 rounded-full shadow-lg animate-pulse text-xs font-mono">
     <div class="w-3 h-3 rounded-full bg-red-500 animate-ping"></div>
     <span class="font-bold tracking-wider">REC</span>
     <span id="recording-time-display">00:00.0</span>
@@ -37,53 +37,53 @@
 
   <!-- Non-blocking Floating Mosaic Progress HUD (操作を遮断しないスマート進捗HUD) -->
   <div id="mosaic-progress-overlay" class="fixed top-5 right-5 z-40 hidden pointer-events-none transition-all duration-300 transform translate-y-0 opacity-100">
-    <div class="bg-slate-900/95 backdrop-blur-md border border-sky-500/50 rounded-xl p-3.5 shadow-2xl space-y-2.5 w-72">
+    <div class="bg-white/95 backdrop-blur-md border border-sky-400/50 rounded-xl p-3.5 shadow-2xl space-y-2.5 w-72 text-slate-800">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-2">
-          <div class="w-6 h-6 rounded-lg bg-sky-500/20 border border-sky-500/40 flex items-center justify-center text-sky-400">
+          <div class="w-6 h-6 rounded-lg bg-sky-50 border border-sky-200 flex items-center justify-center text-sky-500">
             <i class="fa-solid fa-shapes text-xs animate-spin" style="animation-duration: 3s;"></i>
           </div>
-          <span class="text-xs font-bold text-white tracking-wide">モザイク物理計算中</span>
+          <span class="text-xs font-bold text-slate-800 tracking-wide">モザイク物理計算中</span>
         </div>
-        <span id="mosaic-progress-percent" class="text-sky-300 font-mono font-bold text-xs">0.000%</span>
+        <span id="mosaic-progress-percent" class="text-sky-600 font-mono font-bold text-xs">0.000%</span>
       </div>
       
       <!-- Progress Bar -->
       <div class="space-y-1">
-        <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden border border-slate-700/60 p-0.5">
+        <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden border border-slate-200 p-0.5">
           <div id="mosaic-progress-bar" class="bg-gradient-to-r from-sky-400 to-indigo-500 h-full rounded-full transition-all duration-100 ease-out" style="width: 0%"></div>
         </div>
-        <div class="flex justify-between items-center text-[10px] text-slate-400 font-mono px-0.5">
+        <div class="flex justify-between items-center text-[10px] text-slate-500 font-mono px-0.5">
           <span id="mosaic-progress-phase" class="truncate max-w-[150px]">充填中...</span>
-          <span id="mosaic-progress-count" class="text-slate-300">0 / 0</span>
+          <span id="mosaic-progress-count" class="text-slate-700">0 / 0</span>
         </div>
       </div>
     </div>
   </div>
 
   <!-- UI Drawer Toggle Floating Button -->
-  <button id="ui-toggle-button" class="fixed top-4 left-4 z-30 p-2.5 rounded-xl bg-slate-900/80 backdrop-blur-md border border-slate-700/60 text-slate-300 hover:text-white hover:bg-slate-800 transition-all shadow-lg flex items-center justify-center group" title="パネルを開閉 (H)">
+  <button id="ui-toggle-button" class="fixed top-4 left-4 z-30 p-2.5 rounded-xl bg-white/90 backdrop-blur-md border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-white transition-all shadow-md flex items-center justify-center group" title="パネルを開閉 (H)">
     <i id="ui-toggle-icon" class="fa-solid fa-sliders text-sm transition-transform duration-300"></i>
   </button>
 
   <!-- Left Side Tool Drawer Window -->
-  <aside id="tool-window" class="fixed top-0 left-0 h-full w-[360px] max-w-[90vw] z-20 bg-slate-900/95 backdrop-blur-xl border-r border-slate-800 shadow-2xl transform transition-transform duration-300 flex flex-col pt-16 pb-4 px-4 custom-scrollbar overflow-y-auto">
+  <aside id="tool-window" class="fixed top-0 left-0 h-full w-[360px] max-w-[90vw] z-20 bg-white/90 backdrop-blur-xl border-r border-slate-200/90 shadow-2xl transform transition-transform duration-300 flex flex-col pt-16 pb-4 px-4 custom-scrollbar overflow-y-auto">
     
     <!-- Header -->
-    <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
+    <div class="flex items-center justify-between pb-3 border-b border-slate-200 mb-4">
       <div>
-        <h1 class="text-base font-bold tracking-tight text-white flex items-center gap-2">
-          <i class="fa-solid fa-shapes text-sky-400 text-sm"></i>
+        <h1 class="text-base font-bold tracking-tight text-slate-900 flex items-center gap-2">
+          <i class="fa-solid fa-shapes text-sky-500 text-sm"></i>
           Mosaic Studio
         </h1>
-        <p class="text-[11px] text-slate-400">Kinetic Mosaic Art Generator</p>
+        <p class="text-[11px] text-slate-500">Kinetic Mosaic Art Generator</p>
       </div>
       <div class="flex items-center gap-1.5">
-        <button id="undo-button" class="has-tooltip p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors text-xs disabled:opacity-30 disabled:cursor-not-allowed">
+        <button id="undo-button" class="has-tooltip p-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 border border-slate-200 transition-colors text-xs disabled:opacity-30 disabled:cursor-not-allowed">
           <i class="fa-solid fa-rotate-left"></i>
           <span class="tooltip-content">取り消し (Undo)</span>
         </button>
-        <button id="redo-button" class="has-tooltip p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors text-xs disabled:opacity-30 disabled:cursor-not-allowed">
+        <button id="redo-button" class="has-tooltip p-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 border border-slate-200 transition-colors text-xs disabled:opacity-30 disabled:cursor-not-allowed">
           <i class="fa-solid fa-rotate-right"></i>
           <span class="tooltip-content">やり直し (Redo)</span>
         </button>
@@ -92,241 +92,241 @@
 
     <!-- Mode and Debug -->
     <div class="grid grid-cols-2 gap-2 mb-4">
-      <div class="bg-slate-950/60 p-1.5 rounded-xl border border-slate-800 flex">
+      <div class="bg-slate-100/90 p-1.5 rounded-xl border border-slate-200 flex">
         <button id="mode-2d-button" class="flex-1 py-1.5 text-xs font-medium rounded-lg transition-all bg-sky-500 text-white shadow-sm flex items-center justify-center gap-1.5">
           <i class="fa-solid fa-square text-[10px]"></i> 2D Mode
         </button>
-        <button id="mode-3d-button" class="flex-1 py-1.5 text-xs font-medium rounded-lg transition-all text-slate-400 hover:text-white flex items-center justify-center gap-1.5">
+        <button id="mode-3d-button" class="flex-1 py-1.5 text-xs font-medium rounded-lg transition-all text-slate-600 hover:text-slate-900 flex items-center justify-center gap-1.5">
           <i class="fa-solid fa-cube text-[10px]"></i> 3D Mode
         </button>
       </div>
-      <button id="debug-toggle-button" class="py-1.5 px-3 text-xs font-medium rounded-xl border border-slate-800 bg-slate-950/60 hover:bg-slate-800 text-slate-300 flex items-center justify-center gap-2 transition-colors">
-        <i class="fa-solid fa-bug text-slate-400"></i>
-        <span>デバッグ: <span id="debug-status-label" class="text-amber-400">OFF</span></span>
+      <button id="debug-toggle-button" class="py-1.5 px-3 text-xs font-medium rounded-xl border border-slate-200 bg-slate-100/90 hover:bg-slate-200/90 text-slate-700 flex items-center justify-center gap-2 transition-colors">
+        <i class="fa-solid fa-bug text-slate-500"></i>
+        <span>デバッグ: <span id="debug-status-label" class="text-amber-600 font-semibold">OFF</span></span>
       </button>
     </div>
 
     <div class="space-y-4 text-xs">
 
-      <!-- Category 0: Mosaic Image & Pixel Art (画像から物理モザイクを出現させる新機能) -->
-      <div class="bg-slate-950/40 rounded-xl border border-slate-800/80 p-3 space-y-3">
-        <div class="flex items-center justify-between font-semibold text-slate-200">
-          <span class="flex items-center gap-1.5"><i class="fa-solid fa-image text-sky-400 text-xs"></i> 画像モザイク (物理アート)</span>
-          <span id="mosaic-active-badge" class="text-[9px] px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-300 font-semibold border border-sky-500/30">ACTIVE</span>
+      <!-- Category 0: Mosaic Image & Pixel Art (画像モザイク設定) -->
+      <div class="bg-white/80 rounded-xl border border-slate-200 shadow-sm p-3 space-y-3">
+        <div class="flex items-center justify-between font-semibold text-slate-800">
+          <span class="flex items-center gap-1.5"><i class="fa-solid fa-image text-sky-500 text-xs"></i> 画像モザイク (物理アート)</span>
+          <span id="mosaic-active-badge" class="text-[9px] px-1.5 py-0.5 rounded bg-sky-100 text-sky-700 font-semibold border border-sky-200">ACTIVE</span>
         </div>
 
         <!-- Preset Artwork Samples Dropdown -->
         <div class="space-y-1">
-          <label class="text-slate-400 text-[11px]">サンプル名画 (著作権クリア)</label>
-          <select id="mosaic-sample-dropdown" class="w-full bg-slate-900 border border-slate-700 text-slate-200 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-sky-500 cursor-pointer">
+          <label class="text-slate-600 text-[11px]">サンプル名画 (著作権クリア)</label>
+          <select id="mosaic-sample-dropdown" class="w-full bg-slate-50 border border-slate-300 text-slate-800 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-sky-500 focus:bg-white cursor-pointer">
             <!-- JSで動的に追加 -->
           </select>
         </div>
 
         <!-- Custom Image Upload -->
         <div class="space-y-1">
-          <label class="py-1.5 px-3 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 text-[11px] border border-slate-700 flex items-center justify-center gap-1.5 cursor-pointer transition">
-            <i class="fa-solid fa-cloud-arrow-up text-sky-400"></i>
+          <label class="py-1.5 px-3 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 text-[11px] border border-slate-300 flex items-center justify-center gap-1.5 cursor-pointer transition shadow-xs">
+            <i class="fa-solid fa-cloud-arrow-up text-sky-500"></i>
             <span>自分の画像を読み込む (PNG/JPG)</span>
             <input type="file" id="mosaic-custom-input" accept="image/*" class="hidden">
           </label>
         </div>
 
         <!-- Dot Art Preview & Quantization -->
-        <div class="space-y-2 pt-1 border-t border-slate-800/60">
-          <div class="flex items-center justify-between text-slate-400 text-[11px]">
+        <div class="space-y-2 pt-1 border-t border-slate-200">
+          <div class="flex items-center justify-between text-slate-600 text-[11px]">
             <span>減色ドット絵プレビュー</span>
-            <span id="mosaic-grid-badge" class="font-mono text-[10px] text-sky-300">--</span>
+            <span id="mosaic-grid-badge" class="font-mono text-[10px] text-sky-600 font-medium">--</span>
           </div>
 
           <div class="flex gap-2.5 items-center">
-            <div id="mosaic-preview-container" class="w-20 h-20 bg-slate-950 rounded-lg border border-slate-800 flex items-center justify-center overflow-hidden flex-shrink-0">
-              <span class="text-[9px] text-slate-600">生成中...</span>
+            <div id="mosaic-preview-container" class="w-20 h-20 bg-slate-100 rounded-lg border border-slate-200 flex items-center justify-center overflow-hidden flex-shrink-0">
+              <span class="text-[9px] text-slate-400">生成中...</span>
             </div>
             <div class="flex-1 space-y-1.5">
-              <div class="text-[10px] text-slate-400">減色モード:</div>
-              <select id="quantize-mode-select" class="w-full bg-slate-900 border border-slate-700 text-slate-200 rounded px-2 py-1 text-[11px] focus:outline-none focus:border-sky-500">
+              <div class="text-[10px] text-slate-600">減色モード:</div>
+              <select id="quantize-mode-select" class="w-full bg-slate-50 border border-slate-300 text-slate-800 rounded px-2 py-1 text-[11px] focus:outline-none focus:border-sky-500 focus:bg-white">
                 <option value="true" selected>原画そのまま (True Color)</option>
                 <option value="adaptive">適応K-Means (Adaptive)</option>
                 <option value="retro">レトロ 8-bit (GameBoy)</option>
               </select>
-              <div class="flex justify-between items-center text-slate-400 text-[10px]">
-                <span>パレット色数: <span id="quantize-colors-val" class="font-mono text-slate-200">8</span></span>
-                <input type="range" id="quantize-colors-slider" min="4" max="24" step="2" value="8" class="w-20 h-1 bg-slate-800 rounded appearance-none cursor-pointer accent-sky-400">
+              <div class="flex justify-between items-center text-slate-600 text-[10px]">
+                <span>パレット色数: <span id="quantize-colors-val" class="font-mono text-slate-800 font-semibold">8</span></span>
+                <input type="range" id="quantize-colors-slider" min="4" max="24" step="2" value="8" class="w-20 h-1.5 bg-slate-200 rounded appearance-none cursor-pointer accent-sky-500">
               </div>
             </div>
           </div>
         </div>
 
         <!-- Inline Progress Indicator (パネル内進捗表示) -->
-        <div id="mosaic-inline-progress" class="hidden space-y-1 pt-1.5 border-t border-slate-800/60">
+        <div id="mosaic-inline-progress" class="hidden space-y-1 pt-1.5 border-t border-slate-200">
           <div class="flex justify-between items-center text-[10px]">
-            <span id="mosaic-inline-phase" class="text-sky-400 flex items-center gap-1.5 font-medium">
+            <span id="mosaic-inline-phase" class="text-sky-600 flex items-center gap-1.5 font-medium">
               <i class="fa-solid fa-spinner animate-spin text-[9px]"></i>
               <span id="mosaic-inline-text">計算中...</span>
             </span>
-            <span id="mosaic-inline-percent" class="font-mono text-sky-300 font-bold">0.000%</span>
+            <span id="mosaic-inline-percent" class="font-mono text-sky-600 font-bold">0.000%</span>
           </div>
-          <div class="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden border border-slate-700/60">
+          <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden border border-slate-200">
             <div id="mosaic-inline-bar" class="bg-gradient-to-r from-sky-400 to-indigo-500 h-full rounded-full transition-all duration-100 ease-out" style="width: 0%"></div>
           </div>
         </div>
 
         <!-- Mosaic Actions (モザイク生成・操作ボタン) -->
         <div class="grid grid-cols-2 gap-1.5 pt-1">
-          <button id="mosaic-replay-btn" class="py-1.5 px-2 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-[11px] font-medium flex items-center justify-center gap-1 shadow transition" title="物理シミュレーションを再実行して落下">
+          <button id="mosaic-replay-btn" class="py-1.5 px-2 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-[11px] font-medium flex items-center justify-center gap-1 shadow-sm transition" title="物理シミュレーションを再実行して落下">
             <i class="fa-solid fa-play text-[10px]"></i> 再降下
           </button>
-          <button id="mosaic-skip-btn" class="py-1.5 px-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-medium flex items-center justify-center gap-1 border border-slate-700 transition" title="積み重なった完成形を表示">
-            <i class="fa-solid fa-forward-step text-[10px] text-amber-400"></i> 完成形
+          <button id="mosaic-skip-btn" class="py-1.5 px-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 text-[11px] font-medium flex items-center justify-center gap-1 border border-slate-300 shadow-xs transition" title="積み重なった完成形を表示">
+            <i class="fa-solid fa-forward-step text-[10px] text-amber-600"></i> 完成形
           </button>
         </div>
 
         <!-- Playback Speed (倍速設定) -->
-        <div class="flex items-center justify-between pt-1.5 text-[11px] text-slate-400 border-t border-slate-800/60 mt-1">
+        <div class="flex items-center justify-between pt-1.5 text-[11px] text-slate-600 border-t border-slate-200 mt-1">
           <span>再生速度 (倍速):</span>
-          <div class="inline-flex rounded-lg bg-slate-900 p-0.5 border border-slate-800" id="playback-speed-group">
+          <div class="inline-flex rounded-lg bg-slate-100 p-0.5 border border-slate-200" id="playback-speed-group">
             <button type="button" data-speed="1" class="speed-btn px-2 py-0.5 rounded text-[10px] font-medium transition bg-sky-500 text-white shadow-sm">1x</button>
-            <button type="button" data-speed="2" class="speed-btn px-2 py-0.5 rounded text-[10px] font-medium transition text-slate-400 hover:text-white">2x</button>
-            <button type="button" data-speed="4" class="speed-btn px-2 py-0.5 rounded text-[10px] font-medium transition text-slate-400 hover:text-white">4x</button>
-            <button type="button" data-speed="8" class="speed-btn px-2 py-0.5 rounded text-[10px] font-medium transition text-slate-400 hover:text-white">8x</button>
-            <button type="button" data-speed="16" class="speed-btn px-2 py-0.5 rounded text-[10px] font-medium transition text-slate-400 hover:text-white">16x</button>
+            <button type="button" data-speed="2" class="speed-btn px-2 py-0.5 rounded text-[10px] font-medium transition text-slate-600 hover:text-slate-900">2x</button>
+            <button type="button" data-speed="4" class="speed-btn px-2 py-0.5 rounded text-[10px] font-medium transition text-slate-600 hover:text-slate-900">4x</button>
+            <button type="button" data-speed="8" class="speed-btn px-2 py-0.5 rounded text-[10px] font-medium transition text-slate-600 hover:text-slate-900">8x</button>
+            <button type="button" data-speed="16" class="speed-btn px-2 py-0.5 rounded text-[10px] font-medium transition text-slate-600 hover:text-slate-900">16x</button>
           </div>
         </div>
       </div>
 
       <!-- Category 1: Shape & Physics (図形・物理設定) -->
-      <div class="bg-slate-950/40 rounded-xl border border-slate-800/80 p-3 space-y-3">
-        <div class="flex items-center justify-between font-semibold text-slate-200">
-          <span class="flex items-center gap-1.5"><i class="fa-solid fa-atom text-sky-400 text-xs"></i> 形状・物理特性</span>
+      <div class="bg-white/80 rounded-xl border border-slate-200 shadow-sm p-3 space-y-3">
+        <div class="flex items-center justify-between font-semibold text-slate-800">
+          <span class="flex items-center gap-1.5"><i class="fa-solid fa-atom text-sky-500 text-xs"></i> 形状・物理特性</span>
         </div>
 
         <!-- Scale / Size -->
         <div class="space-y-1">
-          <div class="flex justify-between items-center text-slate-400 text-[11px]">
+          <div class="flex justify-between items-center text-slate-600 text-[11px]">
             <span class="has-tooltip cursor-help">図形基本サイズ
               <span class="tooltip-content">生成図形の基本半径 (小さいほど高解像度、大きいほど大粒ピース)</span>
             </span>
-            <span id="shape-size-val" class="font-mono text-slate-200">14</span>
+            <span id="shape-size-val" class="font-mono text-slate-800 font-semibold">14</span>
           </div>
-          <input type="range" id="shape-size-slider" min="6" max="60" value="14" class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-sky-400">
+          <input type="range" id="shape-size-slider" min="6" max="60" value="14" class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-sky-500">
         </div>
 
         <!-- Size Variation (Randomness) -->
         <div class="space-y-1">
-          <div class="flex justify-between items-center text-slate-400 text-[11px]">
+          <div class="flex justify-between items-center text-slate-600 text-[11px]">
             <span class="has-tooltip cursor-help">サイズばらつき度
               <span class="tooltip-content">0%で均一サイズ、100%で大小ランダムな変動</span>
             </span>
-            <span id="shape-size-variation-val" class="font-mono text-slate-200">30%</span>
+            <span id="shape-size-variation-val" class="font-mono text-slate-800 font-semibold">30%</span>
           </div>
-          <input type="range" id="shape-size-variation-slider" min="0" max="100" value="30" class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-sky-400">
+          <input type="range" id="shape-size-variation-slider" min="0" max="100" value="30" class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-sky-500">
         </div>
 
         <!-- Vertex Count -->
         <div class="space-y-1">
-          <div class="flex justify-between items-center text-slate-400 text-[11px]">
+          <div class="flex justify-between items-center text-slate-600 text-[11px]">
             <span class="has-tooltip cursor-help">多角形頂点数
               <span class="tooltip-content">多角形の角の数 (4〜14)</span>
             </span>
-            <span id="shape-vertex-val" class="font-mono text-slate-200">5</span>
+            <span id="shape-vertex-val" class="font-mono text-slate-800 font-semibold">5</span>
           </div>
-          <input type="range" id="shape-vertex-slider" min="4" max="14" value="5" class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-sky-400">
+          <input type="range" id="shape-vertex-slider" min="4" max="14" value="5" class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-sky-500">
         </div>
 
         <!-- Curvature -->
         <div class="space-y-1">
-          <div class="flex justify-between items-center text-slate-400 text-[11px]">
+          <div class="flex justify-between items-center text-slate-600 text-[11px]">
             <span class="has-tooltip cursor-help">角の丸み・有機度
               <span class="tooltip-content">0%で鋭角ポリゴン、100%で有機的スプライン曲線</span>
             </span>
-            <span id="shape-curve-val" class="font-mono text-slate-200">80%</span>
+            <span id="shape-curve-val" class="font-mono text-slate-800 font-semibold">80%</span>
           </div>
-          <input type="range" id="shape-curve-slider" min="0" max="100" value="80" class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-sky-400">
+          <input type="range" id="shape-curve-slider" min="0" max="100" value="80" class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-sky-500">
         </div>
 
         <!-- Gravity -->
         <div class="space-y-1">
-          <div class="flex justify-between items-center text-slate-400 text-[11px]">
+          <div class="flex justify-between items-center text-slate-600 text-[11px]">
             <span class="has-tooltip cursor-help">重力加速度
               <span class="tooltip-content">落下の加速度 (Y方向)</span>
             </span>
-            <span id="gravity-val" class="font-mono text-slate-200">1.0</span>
+            <span id="gravity-val" class="font-mono text-slate-800 font-semibold">1.0</span>
           </div>
-          <input type="range" id="gravity-slider" min="1" max="30" value="10" class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-sky-400">
+          <input type="range" id="gravity-slider" min="1" max="30" value="10" class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-sky-500">
         </div>
 
         <!-- Restitution (Bounciness) -->
         <div class="space-y-1">
-          <div class="flex justify-between items-center text-slate-400 text-[11px]">
+          <div class="flex justify-between items-center text-slate-600 text-[11px]">
             <span class="has-tooltip cursor-help">反発係数 (弾性)
               <span class="tooltip-content">跳ね返りの強さ</span>
             </span>
-            <span id="restitution-val" class="font-mono text-slate-200">0.65</span>
+            <span id="restitution-val" class="font-mono text-slate-800 font-semibold">0.65</span>
           </div>
-          <input type="range" id="restitution-slider" min="0" max="95" value="65" class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-sky-400">
+          <input type="range" id="restitution-slider" min="0" max="95" value="65" class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-sky-500">
         </div>
       </div>
 
-      <!-- Category 2: Appearance & Material (配色・パレットを削除し、演出のみ保持) -->
-      <div class="bg-slate-950/40 rounded-xl border border-slate-800/80 p-3 space-y-3">
-        <div class="font-semibold text-slate-200 flex items-center gap-1.5">
-          <i class="fa-solid fa-wand-magic text-purple-400 text-xs"></i> 演出・マテリアル
+      <!-- Category 2: Appearance & Material (演出・マテリアル) -->
+      <div class="bg-white/80 rounded-xl border border-slate-200 shadow-sm p-3 space-y-3">
+        <div class="font-semibold text-slate-800 flex items-center gap-1.5">
+          <i class="fa-solid fa-wand-magic text-purple-500 text-xs"></i> 演出・マテリアル
         </div>
 
         <!-- Custom Background Color Picker -->
         <div class="flex items-center justify-between">
-          <span class="text-slate-400 text-[11px]">背景色</span>
+          <span class="text-slate-600 text-[11px]">背景色</span>
           <div class="flex items-center gap-2">
-            <span id="bg-color-hex" class="font-mono text-slate-300 text-[11px]">#141A45</span>
-            <input type="color" id="bg-color-picker" value="#141A45" class="w-7 h-7 rounded border border-slate-700 bg-transparent cursor-pointer">
+            <span id="bg-color-hex" class="font-mono text-slate-700 text-[11px]">#DEDEDE</span>
+            <input type="color" id="bg-color-picker" value="#dedede" class="w-7 h-7 rounded border border-slate-300 bg-transparent cursor-pointer">
           </div>
         </div>
 
         <!-- Grain Texture Toggle -->
-        <div class="pt-2 border-t border-slate-800/80 space-y-2">
+        <div class="pt-2 border-t border-slate-200 space-y-2">
           <div class="flex items-center justify-between">
-            <span class="text-slate-300 text-[11px] flex items-center gap-1.5">
-              <i class="fa-solid fa-braille text-slate-400 text-xs"></i> フィルムグレインノイズ
+            <span class="text-slate-700 text-[11px] flex items-center gap-1.5">
+              <i class="fa-solid fa-braille text-slate-500 text-xs"></i> フィルムグレインノイズ
             </span>
-            <input type="checkbox" id="grain-checkbox" checked class="w-4 h-4 rounded text-sky-500 bg-slate-900 border-slate-700 cursor-pointer">
+            <input type="checkbox" id="grain-checkbox" checked class="w-4 h-4 rounded text-sky-500 bg-slate-50 border-slate-300 cursor-pointer">
           </div>
           <div id="grain-intensity-wrapper" class="space-y-1">
-            <div class="flex justify-between items-center text-slate-400 text-[11px]">
+            <div class="flex justify-between items-center text-slate-600 text-[11px]">
               <span>ノイズ強度</span>
-              <span id="grain-val" class="font-mono text-slate-200">18%</span>
+              <span id="grain-val" class="font-mono text-slate-800 font-semibold">18%</span>
             </div>
-            <input type="range" id="grain-slider" min="3" max="50" value="18" class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-sky-400">
+            <input type="range" id="grain-slider" min="3" max="50" value="18" class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-sky-500">
           </div>
         </div>
 
         <!-- Shadow Toggle -->
-        <div class="pt-2 border-t border-slate-800/80 flex items-center justify-between">
-          <span class="text-slate-300 text-[11px] flex items-center gap-1.5 has-tooltip cursor-help">
-            <i class="fa-solid fa-moon text-slate-400 text-xs"></i> ドロップシャドウ (影)
+        <div class="pt-2 border-t border-slate-200 flex items-center justify-between">
+          <span class="text-slate-700 text-[11px] flex items-center gap-1.5 has-tooltip cursor-help">
+            <i class="fa-solid fa-moon text-slate-500 text-xs"></i> ドロップシャドウ (影)
             <span class="tooltip-content">図形背面の影描画 (OFFで大幅軽量化)</span>
           </span>
-          <input type="checkbox" id="shadow-checkbox" class="w-4 h-4 rounded text-sky-500 bg-slate-900 border-slate-700 cursor-pointer">
+          <input type="checkbox" id="shadow-checkbox" class="w-4 h-4 rounded text-sky-500 bg-slate-50 border-slate-300 cursor-pointer">
         </div>
       </div>
 
       <!-- Category 3: Recording, Export & State (書き出し・録画) -->
-      <div class="bg-slate-950/40 rounded-xl border border-slate-800/80 p-3 space-y-3">
-        <div class="flex items-center justify-between font-semibold text-slate-200">
-          <span class="flex items-center gap-1.5"><i class="fa-solid fa-file-export text-sky-400 text-xs"></i> 録画・書き出し・保存</span>
+      <div class="bg-white/80 rounded-xl border border-slate-200 shadow-sm p-3 space-y-3">
+        <div class="flex items-center justify-between font-semibold text-slate-800">
+          <span class="flex items-center gap-1.5"><i class="fa-solid fa-file-export text-sky-500 text-xs"></i> 録画・書き出し・保存</span>
         </div>
 
         <!-- Manual Video Recording -->
         <div class="space-y-1.5">
-          <div class="flex justify-between items-center text-[11px] text-slate-400">
+          <div class="flex justify-between items-center text-[11px] text-slate-600">
             <span>ビデオ録画 (WebM 60fps)</span>
-            <span class="text-[10px] text-slate-400">R: 開始 / S: 停止</span>
+            <span class="text-[10px] text-slate-500 font-mono">R: 開始 / S: 停止</span>
           </div>
           <div class="grid grid-cols-2 gap-2">
-            <button id="record-start-button" class="py-2 px-3 rounded-lg bg-red-600 hover:bg-red-500 text-white font-medium text-xs flex items-center justify-center gap-1.5 shadow transition">
+            <button id="record-start-button" class="py-2 px-3 rounded-lg bg-red-600 hover:bg-red-500 text-white font-medium text-xs flex items-center justify-center gap-1.5 shadow-sm transition">
               <i class="fa-solid fa-video"></i> 録画開始
             </button>
-            <button id="record-stop-button" disabled class="py-2 px-3 rounded-lg bg-slate-800 text-slate-500 font-medium text-xs flex items-center justify-center gap-1.5 cursor-not-allowed">
+            <button id="record-stop-button" disabled class="py-2 px-3 rounded-lg bg-slate-100 text-slate-400 font-medium text-xs flex items-center justify-center gap-1.5 cursor-not-allowed border border-slate-200">
               <i class="fa-solid fa-stop"></i> 録画停止
             </button>
           </div>
@@ -334,26 +334,26 @@
 
         <!-- High-Res Image & Vector SVG Export -->
         <div class="space-y-1.5 pt-1">
-          <div class="text-[11px] text-slate-400 has-tooltip">
+          <div class="text-[11px] text-slate-600 has-tooltip">
             高解像度・ベクター出力
             <span class="tooltip-content">レイアウトを維持したままスケーリング描画・SVG保存</span>
           </div>
           <div class="grid grid-cols-2 gap-2">
-            <button id="export-hires-image-button" class="py-2 px-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs flex items-center justify-center gap-1.5 shadow transition" title="4K解像度画像と設定JSONを書き出し">
+            <button id="export-hires-image-button" class="py-2 px-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs flex items-center justify-center gap-1.5 shadow-sm transition" title="4K解像度画像と設定JSONを書き出し">
               <i class="fa-solid fa-camera"></i> 4K画像 & JSON
             </button>
-            <button id="export-svg-button" class="py-2 px-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs flex items-center justify-center gap-1.5 shadow transition" title="ベクターSVGファイルを書き出し">
+            <button id="export-svg-button" class="py-2 px-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs flex items-center justify-center gap-1.5 shadow-sm transition" title="ベクターSVGファイルを書き出し">
               <i class="fa-solid fa-bezier-curve"></i> SVG書き出し
             </button>
           </div>
         </div>
 
         <!-- State JSON Management -->
-        <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800">
-          <button id="export-json-button" class="py-1.5 px-2 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs border border-slate-700 flex items-center justify-center gap-1 transition">
+        <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-200">
+          <button id="export-json-button" class="py-1.5 px-2 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs border border-slate-300 flex items-center justify-center gap-1 shadow-xs transition">
             <i class="fa-solid fa-file-code"></i> JSON保存
           </button>
-          <label class="py-1.5 px-2 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs border border-slate-700 flex items-center justify-center gap-1 cursor-pointer transition">
+          <label class="py-1.5 px-2 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs border border-slate-300 flex items-center justify-center gap-1 cursor-pointer shadow-xs transition">
             <i class="fa-solid fa-upload"></i> JSON復元
             <input type="file" id="import-json-input" accept=".json" class="hidden">
           </label>
@@ -362,12 +362,12 @@
 
     </div>
 
-    <div class="mt-auto pt-4 border-t border-slate-800/80 text-[10px] text-slate-400 flex justify-between items-center">
+    <div class="mt-auto pt-4 border-t border-slate-200 text-[10px] text-slate-500 flex justify-between items-center">
       <div class="flex items-center gap-2">
-        <div>FPS: <span id="fps-display" class="font-mono text-emerald-400">60</span></div>
-        <div>描画: <span id="frame-time-display" class="font-mono text-cyan-400">0.0ms</span></div>
+        <div>FPS: <span id="fps-display" class="font-mono text-emerald-600 font-semibold">60</span></div>
+        <div>描画: <span id="frame-time-display" class="font-mono text-cyan-600 font-semibold">0.0ms</span></div>
       </div>
-      <div class="flex items-center">Bodies: <span id="bodies-count-display" class="font-mono text-sky-400 ml-1">0</span><span id="full-status-badge" class="hidden ml-1.5 text-[9px] px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 font-semibold border border-amber-500/30 tracking-wider">FULL</span></div>
+      <div class="flex items-center">Bodies: <span id="bodies-count-display" class="font-mono text-sky-600 font-semibold ml-1">0</span><span id="full-status-badge" class="hidden ml-1.5 text-[9px] px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 font-semibold border border-amber-300 tracking-wider">FULL</span></div>
       <div class="flex items-center gap-1">UI: <span class="kbd-badge">H</span></div>
     </div>
   </aside>

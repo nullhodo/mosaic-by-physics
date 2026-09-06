@@ -102,12 +102,12 @@ export function setSimulationDisplayMode(is3D) {
     button3D.className =
       "flex-1 py-1.5 text-xs font-medium rounded-lg transition-all bg-sky-500 text-white shadow-sm flex items-center justify-center gap-1.5";
     button2D.className =
-      "flex-1 py-1.5 text-xs font-medium rounded-lg transition-all text-slate-400 hover:text-white flex items-center justify-center gap-1.5";
+      "flex-1 py-1.5 text-xs font-medium rounded-lg transition-all text-slate-600 hover:text-slate-900 flex items-center justify-center gap-1.5";
   } else {
     button2D.className =
       "flex-1 py-1.5 text-xs font-medium rounded-lg transition-all bg-sky-500 text-white shadow-sm flex items-center justify-center gap-1.5";
     button3D.className =
-      "flex-1 py-1.5 text-xs font-medium rounded-lg transition-all text-slate-400 hover:text-white flex items-center justify-center gap-1.5";
+      "flex-1 py-1.5 text-xs font-medium rounded-lg transition-all text-slate-600 hover:text-slate-900 flex items-center justify-center gap-1.5";
   }
 }
 
@@ -505,7 +505,7 @@ export function setupUIEventListeners() {
             "speed-btn px-2 py-0.5 rounded text-[10px] font-medium transition bg-sky-500 text-white shadow-sm";
         } else {
           b.className =
-            "speed-btn px-2 py-0.5 rounded text-[10px] font-medium transition text-slate-400 hover:text-white";
+            "speed-btn px-2 py-0.5 rounded text-[10px] font-medium transition text-slate-600 hover:text-slate-900";
         }
       }
       displayToastNotification(
@@ -680,7 +680,7 @@ export function applyStateFromJsonObject(stateObj) {
         "speed-btn px-2 py-0.5 rounded text-[10px] font-medium transition bg-sky-500 text-white shadow-sm";
     } else {
       b.className =
-        "speed-btn px-2 py-0.5 rounded text-[10px] font-medium transition text-slate-400 hover:text-white";
+        "speed-btn px-2 py-0.5 rounded text-[10px] font-medium transition text-slate-600 hover:text-slate-900";
     }
   }
 

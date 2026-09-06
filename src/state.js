@@ -12,7 +12,7 @@ export const simulationState = {
   gravityForce: 1.0,
   restitutionCoeff: 0.65,
   activePaletteIndex: 1,
-  backgroundColorHex: "#141A45",
+  backgroundColorHex: "#dedede",
   isGrainActive: true,
   grainIntensityPercent: 18,
   isShadowActive: false,
