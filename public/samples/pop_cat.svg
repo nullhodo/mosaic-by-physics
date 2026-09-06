@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="500" height="500">
+  <rect width="100" height="100" fill="#1e1b4b"/>
+  <!-- Left Ear -->
+  <polygon points="15,10 40,40 10,40" fill="#f43f5e"/>
+  <polygon points="20,18 35,38 15,38" fill="#fda4af"/>
+  <!-- Right Ear -->
+  <polygon points="85,10 60,40 90,40" fill="#f43f5e"/>
+  <polygon points="80,18 65,38 85,38" fill="#fda4af"/>
+  <!-- Face Outer -->
+  <polygon points="10,40 90,40 95,75 50,96 5,75" fill="#f59e0b"/>
+  <!-- Face Shadow Half -->
+  <polygon points="50,40 90,40 95,75 50,96" fill="#d97706"/>
+  <!-- Cheeks -->
+  <circle cx="28" cy="72" r="9" fill="#f87171" opacity="0.8"/>
+  <circle cx="72" cy="72" r="9" fill="#f87171" opacity="0.8"/>
+  <!-- Eyes -->
+  <polygon points="22,50 42,50 32,62" fill="#10b981"/>
+  <polygon points="78,50 58,50 68,62" fill="#10b981"/>
+  <circle cx="32" cy="56" r="3.5" fill="#0f172a"/>
+  <circle cx="68" cy="56" r="3.5" fill="#0f172a"/>
+  <circle cx="33.5" cy="54.5" r="1.2" fill="#ffffff"/>
+  <circle cx="69.5" cy="54.5" r="1.2" fill="#ffffff"/>
+  <!-- Nose & Mouth -->
+  <polygon points="46,68 54,68 50,74" fill="#ec4899"/>
+  <path d="M 43 78 Q 50 84 57 78" stroke="#0f172a" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+</svg>

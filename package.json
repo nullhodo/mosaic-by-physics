@@ -1,0 +1,19 @@
+{
+  "name": "kinetic-geometry-cascade",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "format": "biome format --write .",
+    "check": "biome check --write .",
+    "benchmark": "node scripts/run-benchmark.js"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "1.9.4",
+    "matter-js": "^0.20.0",
+    "vite": "^6.2.0"
+  }
+}
