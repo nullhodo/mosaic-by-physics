@@ -606,6 +606,12 @@ export function setupUIEventListeners() {
     runMosaicProcessAndBake();
   });
 
+  // 正弦波スイング投入
+  safeAddEventListener("sine-wave-spawn-toggle", "change", (e) => {
+    simulationState.isSineWaveSpawnActive = e.target.checked;
+    runMosaicProcessAndBake();
+  });
+
   // 背景色ピッカー
   safeAddEventListener("bg-color-picker", "input", (e) => {
     simulationState.backgroundColorHex = e.target.value;
@@ -689,5 +695,10 @@ export function applyStateFromJsonObject(stateObj) {
     sSlider.value = simulationState.shapeBaseRadius;
     const sVal = document.getElementById("shape-size-val");
     if (sVal) sVal.innerText = simulationState.shapeBaseRadius;
+  }
+
+  const sineToggle = document.getElementById("sine-wave-spawn-toggle");
+  if (sineToggle && simulationState.isSineWaveSpawnActive !== undefined) {
+    sineToggle.checked = simulationState.isSineWaveSpawnActive;
   }
 }

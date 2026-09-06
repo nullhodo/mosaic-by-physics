@@ -676,10 +676,31 @@ export async function bakeMosaicPhysics(onProgress = null) {
       spawnedCount < poolCount
     ) {
       const toSpawn = Math.min(spawnBatch, poolCount - spawnedCount);
+      const isSineSwing = simulationState.isSineWaveSpawnActive !== false;
+      const swingCenterX = bounds.left + bounds.width * 0.5;
+      const swingAmplitude = bounds.width * 0.5 * 0.75;
+      const swingPhase = step * 0.045;
+      const swingVelocityX = Math.cos(swingPhase) * 1.8;
+
       for (let s = 0; s < toSpawn; s++) {
         const desc = descriptors[spawnedCount];
         desc.spawnStep = step;
         desc.trajectory = [];
+
+        // 正弦波スイング投入が有効な場合、左右に滑らかに往復する供給位置から投入
+        if (isSineSwing) {
+          const localJitter = (Math.random() * 2 - 1) * (baseRadius * 1.5);
+          const targetX =
+            swingCenterX +
+            Math.sin(swingPhase) * swingAmplitude +
+            localJitter;
+          const margin = desc.radius * 1.0;
+          desc.spawnX = Math.max(
+            bounds.left + margin,
+            Math.min(bounds.right - margin, targetX),
+          );
+          desc.spawnY = bounds.top - 20 - s * 6 - Math.random() * 10;
+        }
 
         // ヘッドレスベイクは超高速な円形コライダーで実行 (衝突判定コストを 1/100 に激減)
         const body = Matter.Bodies.circle(
@@ -694,6 +715,14 @@ export async function bakeMosaicPhysics(onProgress = null) {
             sleepThreshold: 30,
           },
         );
+
+        if (isSineSwing) {
+          Matter.Body.setVelocity(body, {
+            x: swingVelocityX,
+            y: 0.8,
+          });
+        }
+
         body.descIndex = spawnedCount;
         Matter.World.add(bakeWorld, body);
         bakeBodies.push(body);
