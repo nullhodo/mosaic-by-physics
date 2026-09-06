@@ -29,9 +29,9 @@ export function initializePhysicsWorld() {
   }
 
   physicsEngineInstance = Engine.create({
-    positionIterations: 4,
-    velocityIterations: 4,
-    constraintIterations: 1,
+    positionIterations: 12,
+    velocityIterations: 8,
+    constraintIterations: 2,
     enableSleeping: true,
   });
   physicsWorldInstance = physicsEngineInstance.world;
@@ -508,10 +508,10 @@ export async function bakeMosaicPhysics(onProgress = null) {
   const bounds = getMosaicTargetBounds();
   updateMosaicFramePhysics();
 
-  // ヘッドレス物理ワールドの作成
+  // ヘッドレス物理ワールドの作成 (高荷重スタッキング時のジッター・貫通を防ぐためソルバー反復数を強化)
   const bakeEngine = Matter.Engine.create({
-    positionIterations: 4,
-    velocityIterations: 4,
+    positionIterations: 16,
+    velocityIterations: 10,
     enableSleeping: true,
   });
   const bakeWorld = bakeEngine.world;
@@ -527,8 +527,8 @@ export async function bakeMosaicPhysics(onProgress = null) {
     wallThickness,
     {
       isStatic: true,
-      restitution: 0.1,
-      friction: 0.9,
+      restitution: 0.0,
+      friction: 0.95,
     },
   );
   const bLeft = Matter.Bodies.rectangle(
@@ -702,17 +702,21 @@ export async function bakeMosaicPhysics(onProgress = null) {
           desc.spawnY = bounds.top - 20 - s * 6 - Math.random() * 10;
         }
 
-        // ヘッドレスベイクは超高速な円形コライダーで実行 (衝突判定コストを 1/100 に激減)
+        // ヘッドレスベイクは円形コライダーで実行
+        // 描画ポリゴンがはみ出して重なるのを防ぐため、コライダー半径に安全マージン (1.05倍) を確保
+        // 高荷重下の痙攣・めり込みを防ぐため反発係数ゼロ・低スロップ・高減衰を適用
+        const colliderRadius = desc.radius * 1.05;
         const body = Matter.Bodies.circle(
           desc.spawnX,
           desc.spawnY,
-          desc.radius * 0.95,
+          colliderRadius,
           {
-            restitution: 0.1,
-            friction: 0.8,
-            frictionAir: 0.025,
+            restitution: 0.0,
+            friction: 0.85,
+            frictionAir: 0.04,
             density: 0.003,
-            sleepThreshold: 30,
+            slop: 0.01,
+            sleepThreshold: 25,
           },
         );
 
@@ -730,7 +734,12 @@ export async function bakeMosaicPhysics(onProgress = null) {
       }
     }
 
-    Matter.Engine.update(bakeEngine, subDelta);
+    // 物理シミュレーションを2サブステップで高精度に更新 (高速落下時の貫通と高荷重ジッターを根本排除)
+    const subSteps = 2;
+    const miniDelta = subDelta / subSteps;
+    for (let ss = 0; ss < subSteps; ss++) {
+      Matter.Engine.update(bakeEngine, miniDelta);
+    }
 
     // (B) キーフレーム間引きサンプリング (KEYFRAME_INTERVAL ステップごとに記録してメモリ1/3圧縮)
     if (step % KEYFRAME_INTERVAL === 0) {
