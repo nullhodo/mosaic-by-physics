@@ -103,8 +103,6 @@ export const sketchDefinition = (p) => {
     p.push();
     p.translate(-p.width / 2, -p.height / 2);
 
-    renderFloorBaseline(p);
-
     // 額縁フレームの背景（アクリルパネル）
     renderMosaicFrameBackground(p);
 
@@ -175,21 +173,49 @@ export const sketchDefinition = (p) => {
 };
 
 /**
+ * 背景色の明度を判定 (ライトテーマ/ダークテーマ自動調和)
+ */
+export function isBrightBackground(hex) {
+  if (!hex || typeof hex !== "string" || !hex.startsWith("#"))
+    return false;
+  const clean = hex.replace("#", "");
+  const r = Number.parseInt(clean.substring(0, 2), 16) || 0;
+  const g = Number.parseInt(clean.substring(2, 4), 16) || 0;
+  const b = Number.parseInt(clean.substring(4, 6), 16) || 0;
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return luminance > 0.55;
+}
+
+/**
  * 額縁フレームの背景（アクリルパネルバックプレート）を描画
  */
 export function renderMosaicFrameBackground(p) {
   if (!mosaicFrameBounds || mosaicFrameBounds.width <= 0) return;
 
   const { left, top, width, height } = mosaicFrameBounds;
+  const isLight = isBrightBackground(simulationState.backgroundColorHex);
 
-  // 額縁のドロップシャドウ
-  p.noStroke();
-  p.fill(0, 0, 0, 75);
-  p.rect(left - 6, top - 6, width + 12, height + 12, 12);
+  if (isLight) {
+    // ライトテーマ用：上品で柔らかなアンビエントシャドウと白系アクリルパネル
+    p.noStroke();
+    p.fill(0, 0, 0, 30);
+    p.rect(left - 8, top - 6, width + 16, height + 16, 14);
 
-  // アクリルバックパネル
-  p.fill(10, 15, 30, 190);
-  p.rect(left, top, width, height, 8);
+    p.fill(0, 0, 0, 15);
+    p.rect(left - 4, top - 3, width + 8, height + 8, 10);
+
+    // アクリルバックパネル (清潔なオフホワイト)
+    p.fill(250, 250, 252, 235);
+    p.rect(left, top, width, height, 8);
+  } else {
+    // ダークテーマ用：濃紺アクリルパネル
+    p.noStroke();
+    p.fill(0, 0, 0, 75);
+    p.rect(left - 6, top - 6, width + 12, height + 12, 12);
+
+    p.fill(10, 15, 30, 190);
+    p.rect(left, top, width, height, 8);
+  }
 }
 
 /**
@@ -199,62 +225,43 @@ export function renderMosaicFrameForeground(p) {
   if (!mosaicFrameBounds || mosaicFrameBounds.width <= 0) return;
 
   const { left, right, top, bottom, width, height } = mosaicFrameBounds;
+  const isLight = isBrightBackground(simulationState.backgroundColorHex);
 
   p.noFill();
 
-  // ガラス風の外枠
-  p.stroke(255, 255, 255, 55);
-  p.strokeWeight(2);
-  p.rect(left, top, width, height, 8);
+  if (isLight) {
+    // ライトテーマ用：上質なシルバーフレームと光沢ライン
+    p.stroke(100, 116, 139, 70);
+    p.strokeWeight(1.5);
+    p.rect(left, top, width, height, 8);
 
-  // 内側の繊細なハイライト枠
-  p.stroke(255, 255, 255, 22);
-  p.strokeWeight(1);
-  p.rect(left + 3, top + 3, width - 6, height - 6, 6);
+    // 内側の繊細なホワイトハイライト
+    p.stroke(255, 255, 255, 180);
+    p.strokeWeight(1);
+    p.rect(left + 2, top + 2, width - 4, height - 4, 6);
 
-  // 上辺のアクリル反射光沢ハイライト
-  p.stroke(255, 255, 255, 95);
-  p.strokeWeight(1.5);
-  p.line(left + 15, top + 1, right - 15, top + 1);
+    // 上辺のアクリル反射光沢ハイライト
+    p.stroke(255, 255, 255, 240);
+    p.strokeWeight(1.5);
+    p.line(left + 12, top + 1, right - 12, top + 1);
+  } else {
+    // ダークテーマ用：ガラス風外枠
+    p.stroke(255, 255, 255, 55);
+    p.strokeWeight(2);
+    p.rect(left, top, width, height, 8);
 
-  // 底面ベースライン
-  p.stroke(56, 189, 248, 85);
-  p.strokeWeight(2);
-  p.line(left - 4, bottom + 2, right + 4, bottom + 2);
+    p.stroke(255, 255, 255, 22);
+    p.strokeWeight(1);
+    p.rect(left + 3, top + 3, width - 6, height - 6, 6);
+
+    p.stroke(255, 255, 255, 95);
+    p.strokeWeight(1.5);
+    p.line(left + 15, top + 1, right - 15, top + 1);
+  }
 }
 
 export function renderFloorBaseline(p) {
-  if (simulationState.floorOffsetDistance < 0) return;
-
-  const floorY = window.innerHeight - simulationState.floorOffsetDistance;
-
-  if (simulationState.is3DMode) {
-    p.push();
-    p.translate(p.width / 2, floorY + 15, 0);
-    p.ambientLight(150);
-    p.fill(20, 27, 45);
-    p.stroke(56, 189, 248, 180);
-    p.strokeWeight(2.0);
-    p.box(p.width * 1.5, 30, 400);
-    p.pop();
-  } else {
-    p.noStroke();
-    p.fill(15, 23, 42, 230);
-    p.rect(
-      0,
-      floorY,
-      window.innerWidth,
-      simulationState.floorOffsetDistance,
-    );
-
-    p.stroke(56, 189, 248, 220);
-    p.strokeWeight(3);
-    p.line(0, floorY, window.innerWidth, floorY);
-
-    p.stroke(255, 255, 255, 60);
-    p.strokeWeight(1);
-    p.line(0, floorY + 3, window.innerWidth, floorY + 3);
-  }
+  // 床面のビジュアル表示は削除済み
 }
 
 export function updateGrainNoiseBuffer() {

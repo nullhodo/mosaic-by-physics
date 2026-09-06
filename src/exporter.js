@@ -144,20 +144,7 @@ export function exportSvgComposition() {
     `  <rect width="100%" height="100%" fill="${simulationState.backgroundColorHex}" />`,
   );
 
-  // 2. 床面描画
-  if (simulationState.floorOffsetDistance >= 0) {
-    const floorY =
-      exportTargetHeight - simulationState.floorOffsetDistance;
-    svgParts.push(
-      `  <rect x="0" y="${floorY}" width="${exportTargetWidth}" height="${simulationState.floorOffsetDistance}" fill="rgba(15, 23, 42, 0.9)" />`,
-    );
-    svgParts.push(
-      `  <line x1="0" y1="${floorY}" x2="${exportTargetWidth}" y2="${floorY}" stroke="rgba(56, 189, 248, 0.86)" stroke-width="3" />`,
-    );
-    svgParts.push(
-      `  <line x1="0" y1="${floorY + 3}" x2="${exportTargetWidth}" y2="${floorY + 3}" stroke="rgba(255, 255, 255, 0.24)" stroke-width="1" />`,
-    );
-  }
+  // 2. 床面描画（ビジュアル削除済み）
 
   // 3. 各物理幾何学図形（Chaikin角丸め適用済みの厳密な1周パス）
   for (
