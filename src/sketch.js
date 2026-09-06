@@ -1,4 +1,8 @@
 import {
+  captureCanvasFrameForRecording,
+  getIsCurrentlyRecording,
+} from "./exporter.js";
+import {
   getSmoothedPolygonVertices,
   initGpuRenderer,
   lastGpuRenderDurationMs,
@@ -136,6 +140,11 @@ export const sketchDefinition = (p) => {
         p.height,
       );
       p.pop();
+    }
+
+    // MP4録画セッション中は各フレームをエンコーダへ転送
+    if (getIsCurrentlyRecording()) {
+      captureCanvasFrameForRecording();
     }
 
     const frameDuration = performance.now() - frameStart;

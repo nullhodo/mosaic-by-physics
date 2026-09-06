@@ -1,3 +1,4 @@
+import { ArrayBufferTarget, Muxer } from "mp4-muxer";
 import { colorPalettes } from "./constants/palettes.js";
 import { activeGeometricBodies } from "./physics.js";
 import {
@@ -15,13 +16,16 @@ import {
 } from "./state.js";
 import { displayToastNotification } from "./ui.js";
 
-let mediaRecorderInstance = null;
-let recordedVideoChunks = [];
 let isCurrentlyRecording = false;
 let recordingStartTime = 0;
 let recordingTimerInterval = null;
 let targetLoopRecordingCount = 0;
 let completedLoopsCount = 0;
+
+let mp4MuxerInstance = null;
+let videoEncoderInstance = null;
+let recordedFrameCount = 0;
+let recordingCanvasElement = null;
 
 export function getIsCurrentlyRecording() {
   return isCurrentlyRecording;
@@ -278,64 +282,132 @@ export function startCanvasVideoRecording() {
     return;
   }
 
-  const canvasStream = canvasElement.captureStream(60);
-  recordedVideoChunks = [];
-
-  let mimeTypeOption = "video/webm;codecs=vp9";
-  if (!MediaRecorder.isTypeSupported(mimeTypeOption)) {
-    mimeTypeOption = "video/webm";
-  }
-
-  try {
-    mediaRecorderInstance = new MediaRecorder(canvasStream, {
-      mimeType: mimeTypeOption,
-      videoBitsPerSecond: 16000000,
-    });
-  } catch (error) {
+  if (typeof VideoEncoder === "undefined") {
     displayToastNotification(
-      `MediaRecorderの作成に失敗しました: ${error.message}`,
+      "お使いのブラウザはMP4 (WebCodecs) エンコードに対応していません",
       "warning",
     );
     return;
   }
 
-  mediaRecorderInstance.ondataavailable = (event) => {
-    if (event.data && event.data.size > 0) {
-      recordedVideoChunks.push(event.data);
+  // H.264 (AVC) は偶数解像度 (2の倍数) が必須
+  const width = Math.floor(canvasElement.width / 2) * 2;
+  const height = Math.floor(canvasElement.height / 2) * 2;
+  const fps = 60;
+  const bitrate = 16_000_000;
+
+  try {
+    mp4MuxerInstance = new Muxer({
+      target: new ArrayBufferTarget(),
+      video: {
+        codec: "avc",
+        width,
+        height,
+        frameRate: fps,
+      },
+      fastStart: "in-memory",
+      firstTimestampBehavior: "offset",
+    });
+
+    videoEncoderInstance = new VideoEncoder({
+      output: (chunk, meta) => {
+        if (mp4MuxerInstance) {
+          mp4MuxerInstance.addVideoChunk(chunk, meta);
+        }
+      },
+      error: (e) => {
+        console.error("VideoEncoder error:", e);
+        displayToastNotification(
+          `エンコードエラー: ${e.message}`,
+          "warning",
+        );
+      },
+    });
+
+    videoEncoderInstance.configure({
+      codec: "avc1.420028", // Baseline Profile Level 4.0
+      width,
+      height,
+      bitrate,
+      framerate: fps,
+    });
+
+    recordingCanvasElement = canvasElement;
+    recordedFrameCount = 0;
+    isCurrentlyRecording = true;
+    recordingStartTime = Date.now();
+
+    const hud = document.getElementById("recording-hud");
+    if (hud) hud.classList.remove("hidden");
+    const startBtn = document.getElementById("record-start-button");
+    if (startBtn) startBtn.disabled = true;
+    const stopBtn = document.getElementById("record-stop-button");
+    if (stopBtn) {
+      stopBtn.disabled = false;
+      stopBtn.classList.remove(
+        "text-slate-400",
+        "cursor-not-allowed",
+        "bg-slate-100",
+      );
+      stopBtn.classList.add("bg-red-500", "text-white");
     }
-  };
 
-  mediaRecorderInstance.onstop = () => {
-    finishVideoRecording();
-  };
-
-  mediaRecorderInstance.start(100);
-  isCurrentlyRecording = true;
-  recordingStartTime = Date.now();
-
-  const hud = document.getElementById("recording-hud");
-  if (hud) hud.classList.remove("hidden");
-  const startBtn = document.getElementById("record-start-button");
-  if (startBtn) startBtn.disabled = true;
-  const stopBtn = document.getElementById("record-stop-button");
-  if (stopBtn) {
-    stopBtn.disabled = false;
-    stopBtn.classList.remove(
-      "text-slate-500",
-      "cursor-not-allowed",
-      "bg-slate-800",
+    recordingTimerInterval = setInterval(updateRecordingTimerHUD, 100);
+    displayToastNotification(
+      "MP4録画を開始しました [Sキーで停止]",
+      "info",
     );
-    stopBtn.classList.add("bg-red-600", "text-white");
+    debugLogMessage("MP4 Recording Started", {
+      width,
+      height,
+      fps,
+      bitrate,
+    });
+  } catch (error) {
+    console.error("MP4 recording initialization error:", error);
+    displayToastNotification(
+      `MP4録画の開始に失敗しました: ${error.message}`,
+      "warning",
+    );
   }
-
-  recordingTimerInterval = setInterval(updateRecordingTimerHUD, 100);
-  displayToastNotification("録画を開始しました [Sキーで停止]", "info");
-  debugLogMessage("Recording Started", { fps: 60, bitrate: "16Mbps" });
 }
 
-export function stopCanvasVideoRecording() {
-  if (!isCurrentlyRecording || !mediaRecorderInstance) return;
-  mediaRecorderInstance.stop();
+/**
+ * 毎フレームのキャンバス描画をWebCodecsエンコーダへ転送 (sketch.jsのdraw末尾から呼び出し)
+ */
+export function captureCanvasFrameForRecording() {
+  if (
+    !isCurrentlyRecording ||
+    !videoEncoderInstance ||
+    !recordingCanvasElement ||
+    videoEncoderInstance.state !== "configured"
+  ) {
+    return;
+  }
+
+  // エンコーダバックログ過多時の安全保護
+  if (videoEncoderInstance.encodeQueueSize > 12) return;
+
+  const width = Math.floor(recordingCanvasElement.width / 2) * 2;
+  const height = Math.floor(recordingCanvasElement.height / 2) * 2;
+  const timestampUs = Math.round((recordedFrameCount * 1_000_000) / 60);
+
+  try {
+    const videoFrame = new VideoFrame(recordingCanvasElement, {
+      timestamp: timestampUs,
+      visibleRect: { x: 0, y: 0, width, height },
+    });
+    const isKeyframe = recordedFrameCount % 120 === 0; // 2秒おきにキーフレーム
+    videoEncoderInstance.encode(videoFrame, { keyFrame: isKeyframe });
+    videoFrame.close();
+    recordedFrameCount++;
+  } catch (error) {
+    console.warn("VideoFrame capture failed:", error);
+  }
+}
+
+export async function stopCanvasVideoRecording() {
+  if (!isCurrentlyRecording) return;
   isCurrentlyRecording = false;
   clearInterval(recordingTimerInterval);
 
@@ -347,25 +419,57 @@ export function stopCanvasVideoRecording() {
   if (stopBtn) {
     stopBtn.disabled = true;
     stopBtn.className =
-      "py-2 px-3 rounded-lg bg-slate-800 text-slate-500 font-medium text-xs flex items-center justify-center gap-1.5 cursor-not-allowed";
+      "py-2 px-3 rounded-lg bg-slate-100 text-slate-400 font-medium text-xs flex items-center justify-center gap-1.5 cursor-not-allowed";
   }
-}
 
-function finishVideoRecording() {
-  const timestamp = getFormattedDate();
-  const baseFilename = `${sketchTitle}_video_${timestamp}_${window.innerWidth}x${window.innerHeight}`;
-  const videoBlob = new Blob(recordedVideoChunks, { type: "video/webm" });
+  displayToastNotification("MP4動画をエンコード・生成中……", "info");
 
-  const videoUrl = URL.createObjectURL(videoBlob);
-  const downloadLink = document.createElement("a");
-  downloadLink.href = videoUrl;
-  downloadLink.download = `${baseFilename}.webm`;
-  downloadLink.click();
-  URL.revokeObjectURL(videoUrl);
+  try {
+    if (
+      videoEncoderInstance &&
+      videoEncoderInstance.state === "configured"
+    ) {
+      await videoEncoderInstance.flush();
+      videoEncoderInstance.close();
+      videoEncoderInstance = null;
+    }
 
-  downloadStateJsonFile(`${baseFilename}.json`);
-  displayToastNotification("動画とJSONを書き出しました", "success");
-  debugLogMessage("Recording Finished", { filename: baseFilename });
+    if (mp4MuxerInstance) {
+      mp4MuxerInstance.finalize();
+      const { buffer } = mp4MuxerInstance.target;
+      const mp4Blob = new Blob([buffer], { type: "video/mp4" });
+
+      const timestamp = getFormattedDate();
+      const baseFilename = `${sketchTitle}_video_${timestamp}`;
+
+      const videoUrl = URL.createObjectURL(mp4Blob);
+      const downloadLink = document.createElement("a");
+      downloadLink.href = videoUrl;
+      downloadLink.download = `${baseFilename}.mp4`;
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+      URL.revokeObjectURL(videoUrl);
+
+      downloadStateJsonFile(`${baseFilename}.json`);
+      displayToastNotification(
+        "MP4動画と設定JSONを書き出しました",
+        "success",
+      );
+      debugLogMessage("MP4 Exported", {
+        filename: `${baseFilename}.mp4`,
+        frames: recordedFrameCount,
+      });
+      mp4MuxerInstance = null;
+      recordingCanvasElement = null;
+    }
+  } catch (error) {
+    console.error("MP4 finalization failed:", error);
+    displayToastNotification(
+      `MP4書き出しに失敗しました: ${error.message}`,
+      "warning",
+    );
+  }
 }
 
 function updateRecordingTimerHUD() {

@@ -120,7 +120,7 @@
 * **フィルムグレインノイズ**: 起動時に1回だけ生成する静的ノイズバッファを用いた上品な粒状感テクスチャ。
 
 ### 5. エクスポート & 録画機能
-* **WebMビデオ録画**: キャンバスの描画を高画質WebM形式 (60fps) で直接録画・ダウンロード。
+* **MP4ビデオ録画 (H.264 / AVC 60fps)**: WebCodecs API および `mp4-muxer` を用いて、ブラウザ上でハードウェアエンコードされた高精細MP4動画を直接録画・ダウンロード。
 * **4K超高解像度画像出力**: 現在のフレームを4K相当の高精細画像として書き出し。
 * **ベクターSVG書き出し**: 拡大・縮小しても劣化しないベクターパスデータを出力。
 * **設定JSONの保存 & 復元**: シミュレーション・演出パラメータをJSONファイルとして保存し、いつでも完全に再現可能。
@@ -177,7 +177,7 @@ mosaic-by-physics/
     ├── gpuRenderer.js          - WebGL2 GLSLカスタムシェーダーによるGPU一括バッチレンダラー
     ├── ui.js                   - ツールパネルUIイベントバインディング・HUD表示
     ├── imageProcessor.js       - K-Meansクラスタリング・グリッドサンプリング
-    ├── exporter.js             - 4K PNG・SVG・WebM録画・JSON保存/復元
+    ├── exporter.js             - 4K PNG・SVG・MP4録画 (mp4-muxer)・JSON保存/復元
     ├── style.css               - カスタムスクロールバー・ツールチップスタイル
     └── constants/
         └── palettes.js         - レトロ・プリセットカラーパレット定義
@@ -216,8 +216,8 @@ mosaic-by-physics/
 | キー | 操作内容 |
 | :--- | :--- |
 | `H` | ツールパネルの表示 / 非表示切り替え |
-| `R` | WebMビデオ録画の開始 |
-| `S` | WebMビデオ録画の停止 & ダウンロード |
+| `R` | MP4ビデオ録画の開始 |
+| `S` | MP4ビデオ録画の停止 & ダウンロード |
 | `Ctrl + Z` | 設定変更の取り消し (Undo) |
 | `Ctrl + Shift + Z` | 設定変更のやり直し (Redo) |
 
@@ -229,6 +229,7 @@ mosaic-by-physics/
 * **描画ライブラリ**: [p5.js](https://p5js.org/) (v1.9.4, WEBGL2)
 * **GPU高速化**: WebGL2, GLSL Custom Shader (`#version 300 es`), Batched Mesh Rendering
 * **2D物理演算**: [Matter.js](https://brm.io/matter-js/) (v0.20.0, ヘッドレスシミュレーション & 決定論的軌跡ベイク)
+* **動画エンコード & Muxer**: [mp4-muxer](https://github.com/Vanilagy/mp4-muxer) (v5.2.2), WebCodecs API (`VideoEncoder`, H.264 / AVC 60fps)
 * **ベクター出力**: [p5.js-svg](https://github.com/zenozeng/p5.js-svg) (v1.5.1)
 * **スタイリング**: Vanilla CSS, [Tailwind CSS](https://tailwindcss.com/)
 * **アイコン**: [FontAwesome](https://fontawesome.com/) (v6.5.1)
