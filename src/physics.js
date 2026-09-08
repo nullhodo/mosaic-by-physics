@@ -569,14 +569,14 @@ export async function bakeMosaicPhysics(onProgress = null) {
   const avgBodyArea = Math.PI * baseRadius * baseRadius;
   const poolCount = Math.max(
     30,
-    Math.min(1300, Math.round((area * 1.7) / avgBodyArea)),
+    Math.min(7000, Math.round((area * 1.7) / avgBodyArea)),
   );
 
-  // 額縁上端の到達センシング用パラメータ
-  const topThresholdY = bounds.top + baseRadius * 1.1;
+  // 額縁上端の到達センシング用パラメータ (上部2層分の領域で安定判定)
+  const topThresholdY = bounds.top + baseRadius * 2.2;
   const requiredTopRestingCount = Math.max(
-    3,
-    Math.floor(bounds.width / (baseRadius * 2.3)),
+    4,
+    Math.floor(bounds.width / (baseRadius * 3.5)),
   );
 
   for (let i = 0; i < poolCount; i++) {
@@ -618,14 +618,18 @@ export async function bakeMosaicPhysics(onProgress = null) {
   let isTopFilled = false;
   let spawnFinishedStep = -1;
 
-  // 円形コライダーにより超高速化されたため、一括投入バッチを最適化
-  const spawnBatch = poolCount > 400 ? 6 : poolCount > 200 ? 4 : 3;
+  // スポーンバッチの動的決定 (総数に関わらず適度な降下ステップ数 ~260-300ステップ に収めて快適にプレビュー)
   const spawnInterval = 2;
+  const targetSpawnSteps = 280;
+  const spawnBatch = Math.max(
+    3,
+    Math.ceil(poolCount / (targetSpawnSteps / spawnInterval)),
+  );
   const subDelta = 1000 / 60;
   const estimatedSpawnSteps =
     Math.ceil(poolCount / spawnBatch) * spawnInterval;
-  const estimatedTotalSteps = estimatedSpawnSteps + 120;
-  const maxSteps = Math.min(1200, estimatedTotalSteps + 200);
+  const estimatedTotalSteps = estimatedSpawnSteps + 140;
+  const maxSteps = Math.max(1200, estimatedTotalSteps + 300);
   let totalStepsRecorded = 0;
 
   for (let step = 0; step < maxSteps; step++) {
@@ -636,26 +640,26 @@ export async function bakeMosaicPhysics(onProgress = null) {
       return;
     }
 
-    // 最低必要個数 (額縁面積の90%相当) に達するまでは上端判定を行わない (落下中の誤判定を100%防止)
+    // 最低必要個数 (額縁面積の65%相当) に達するまでは上端判定を行わない (落下中の誤判定を100%防止)
     const minSpawnRequired = Math.max(
-      25,
-      Math.round((area * 0.9) / avgBodyArea),
+      20,
+      Math.round((area * 0.65) / avgBodyArea),
     );
 
-    // 上端到達判定: 額縁上端付近 (bounds.top 〜 topThresholdY) に十分な数の落ち着いたピースが到達したらスポーン終了
+    // 上端到達判定: 額縁上端付近に十分な数の落ち着いたピースが到達したらスポーン終了
     if (!isTopFilled && spawnedCount >= minSpawnRequired) {
       let topCount = 0;
       for (let b = 0; b < bakeBodies.length; b++) {
         const body = bakeBodies[b];
         const desc = descriptors[body.descIndex];
-        // スポーンから十分時間 (35ステップ以上) が経過し、額縁天面スロット内に静止しているピースのみ対象
+        // スポーンから十分時間 (30ステップ以上) が経過し、額縁天面付近に静止しているピースのみ対象
         if (
-          step - desc.spawnStep >= 35 &&
-          body.position.y >= bounds.top - 5 &&
+          step - desc.spawnStep >= 30 &&
+          body.position.y >= bounds.top - baseRadius * 1.5 &&
           body.position.y <= topThresholdY &&
-          body.position.x >= bounds.left &&
-          body.position.x <= bounds.right &&
-          body.speed < 1.0
+          body.position.x >= bounds.left - 10 &&
+          body.position.x <= bounds.right + 10 &&
+          body.speed < 1.2
         ) {
           topCount++;
         }
@@ -699,7 +703,9 @@ export async function bakeMosaicPhysics(onProgress = null) {
             bounds.left + margin,
             Math.min(bounds.right - margin, targetX),
           );
-          desc.spawnY = bounds.top - 20 - s * 6 - Math.random() * 10;
+          desc.spawnY = bounds.top - 20 - s * 4 - Math.random() * 10;
+        } else {
+          desc.spawnY = bounds.top - 20 - s * 4 - Math.random() * 20;
         }
 
         // ヘッドレスベイクは円形コライダーで実行

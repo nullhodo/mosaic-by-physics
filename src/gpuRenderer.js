@@ -38,9 +38,9 @@ export function getSmoothedPolygonVertices(vertices, curvatureRatio) {
   return currentPoints;
 }
 
-// 最大ピース数および頂点バッファの容量設定
-const MAX_PIECES = 2500;
-const MAX_VERTS_PER_PIECE = 96; // Chaikinスムージング後の最大頂点数(約64〜80)に対応
+// 最大ピース数および頂点バッファの容量設定 (微小ピース生成時でも頭打ちしないよう拡張)
+const MAX_PIECES = 7000;
+const MAX_VERTS_PER_PIECE = 64; // Chaikinスムージング後の最大頂点数(最大14角形×4=56)に対応
 const FLOATS_PER_VERTEX = 6; // x, y, r, g, b, a
 
 // 再利用可能な頂点データプール (毎フレームのGCゼロ化)

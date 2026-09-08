@@ -13,6 +13,7 @@ import {
   activeGeometricBodies,
   bakeMosaicPhysics,
   clearAllGeometricBodies,
+  getMosaicTargetBounds,
   physicsWorldInstance,
   resetPlaybackToStart,
   skipToCompletion,
@@ -370,8 +371,20 @@ export async function runMosaicProcessAndBake() {
   setProgressState(5.0, "画像を解析中...");
   await new Promise((r) => setTimeout(r, 10));
 
+  const bounds = getMosaicTargetBounds();
+  const baseRadius = Math.max(5, simulationState.shapeBaseRadius || 11);
+  const avgArea = Math.PI * baseRadius * baseRadius;
+  const estimatedCount = Math.max(
+    80,
+    Math.min(
+      6000,
+      Math.round((bounds.width * bounds.height * 0.72) / avgArea),
+    ),
+  );
+  simulationState.targetObjectCount = estimatedCount;
+
   currentProcessedImage.process({
-    targetObjectCount: simulationState.targetObjectCount || 450,
+    targetObjectCount: simulationState.targetObjectCount,
     quantizeMode: simulationState.quantizeMode,
     paletteColorsCount: simulationState.paletteColorsCount,
     retroTheme: simulationState.retroTheme,
