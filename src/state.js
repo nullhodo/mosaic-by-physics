@@ -13,6 +13,7 @@ export const simulationState = {
   restitutionCoeff: 0.3,
   pieceGapPercent: 12,
   isSineWaveSpawnActive: true,
+  sineSpawnFlowRate: 2,
   activePaletteIndex: 1,
   pageBackgroundColorHex: "#dedede",
   canvasBackgroundColorHex: "#f8f9fa",

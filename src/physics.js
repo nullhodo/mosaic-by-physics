@@ -618,13 +618,19 @@ export async function bakeMosaicPhysics(onProgress = null) {
   let isTopFilled = false;
   let spawnFinishedStep = -1;
 
-  // スポーンバッチの動的決定 (総数に関わらず適度な降下ステップ数 ~260-300ステップ に収めて快適にプレビュー)
+  // スポーンバッチの動的決定
+  // 正弦波スイング時は設定された流速 (sineSpawnFlowRate: 1〜8、デフォルト2) に基づき、細く優美な砂時計ストリームを形成
+  // 全面降下時は適度な降下ステップ数 (~260-300ステップ) に収まるよう自動スケーリング
+  const isSineSwing = simulationState.isSineWaveSpawnActive !== false;
+  const sineFlowRate = simulationState.sineSpawnFlowRate ?? 2;
   const spawnInterval = 2;
   const targetSpawnSteps = 280;
-  const spawnBatch = Math.max(
-    3,
-    Math.ceil(poolCount / (targetSpawnSteps / spawnInterval)),
-  );
+  const spawnBatch = isSineSwing
+    ? Math.max(1, Math.min(8, Math.round(sineFlowRate)))
+    : Math.max(
+        3,
+        Math.ceil(poolCount / (targetSpawnSteps / spawnInterval)),
+      );
   const subDelta = 1000 / 60;
   const estimatedSpawnSteps =
     Math.ceil(poolCount / spawnBatch) * spawnInterval;
@@ -680,11 +686,10 @@ export async function bakeMosaicPhysics(onProgress = null) {
       spawnedCount < poolCount
     ) {
       const toSpawn = Math.min(spawnBatch, poolCount - spawnedCount);
-      const isSineSwing = simulationState.isSineWaveSpawnActive !== false;
       const swingCenterX = bounds.left + bounds.width * 0.5;
       const swingAmplitude = bounds.width * 0.5 * 0.75;
       const swingPhase = step * 0.045;
-      const swingVelocityX = Math.cos(swingPhase) * 1.8;
+      const swingVelocityX = Math.cos(swingPhase) * 1.5;
 
       for (let s = 0; s < toSpawn; s++) {
         const desc = descriptors[spawnedCount];
@@ -693,7 +698,8 @@ export async function bakeMosaicPhysics(onProgress = null) {
 
         // 正弦波スイング投入が有効な場合、左右に滑らかに往復する供給位置から投入
         if (isSineSwing) {
-          const localJitter = (Math.random() * 2 - 1) * (baseRadius * 1.5);
+          // 単列〜数珠つなぎの流線になるよう横の散らばりを抑え、縦方向に等間隔に配置して初期衝突爆発を防止
+          const localJitter = (Math.random() * 2 - 1) * (baseRadius * 0.4);
           const targetX =
             swingCenterX +
             Math.sin(swingPhase) * swingAmplitude +
@@ -703,7 +709,8 @@ export async function bakeMosaicPhysics(onProgress = null) {
             bounds.left + margin,
             Math.min(bounds.right - margin, targetX),
           );
-          desc.spawnY = bounds.top - 20 - s * 4 - Math.random() * 10;
+          desc.spawnY =
+            bounds.top - 20 - s * (desc.radius * 2.2) - Math.random() * 4;
         } else {
           desc.spawnY = bounds.top - 20 - s * 4 - Math.random() * 20;
         }

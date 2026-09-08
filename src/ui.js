@@ -525,6 +525,35 @@ export function updateDominantColorUI() {
   }
 }
 
+export function updateSineFlowLabel(val) {
+  const valElem = document.getElementById("sine-flow-val");
+  if (!valElem) return;
+  const num = Number(val);
+  const labels = {
+    1: "1 (極細・単列)",
+    2: "2 (標準ストリーム)",
+    3: "3 (軽快ストリーム)",
+    4: "4 (中流)",
+    5: "5 (やや密)",
+    6: "6 (密流)",
+    7: "7 (高密度)",
+    8: "8 (一括投入)",
+  };
+  valElem.innerText = labels[num] || `${num}`;
+}
+
+export function updateSineFlowUI() {
+  const wrapper = document.getElementById("sine-flow-wrapper");
+  const isActive = simulationState.isSineWaveSpawnActive !== false;
+  if (wrapper) {
+    if (isActive) {
+      wrapper.classList.remove("hidden");
+    } else {
+      wrapper.classList.add("hidden");
+    }
+  }
+}
+
 /* =========================================================================
    UIイベントリスナー設定 (元の機能完全網羅 + モザイク連携)
    ========================================================================= */
@@ -733,9 +762,23 @@ export function setupUIEventListeners() {
     markStaticLayerDirty();
   });
 
-  // 正弦波スイング投入
+  // 正弦波スイング投入 & 流速設定
+  updateSineFlowUI();
+  updateSineFlowLabel(simulationState.sineSpawnFlowRate ?? 2);
+
   safeAddEventListener("sine-wave-spawn-toggle", "change", (e) => {
     simulationState.isSineWaveSpawnActive = e.target.checked;
+    updateSineFlowUI();
+    runMosaicProcessAndBake();
+  });
+
+  safeAddEventListener("sine-flow-slider", "input", (e) => {
+    const val = Number.parseInt(e.target.value, 10);
+    simulationState.sineSpawnFlowRate = val;
+    updateSineFlowLabel(val);
+  });
+
+  safeAddEventListener("sine-flow-slider", "change", () => {
     runMosaicProcessAndBake();
   });
 
@@ -887,6 +930,12 @@ export function applyStateFromJsonObject(stateObj) {
   if (sineToggle && simulationState.isSineWaveSpawnActive !== undefined) {
     sineToggle.checked = simulationState.isSineWaveSpawnActive;
   }
+  const sineFlowSlider = document.getElementById("sine-flow-slider");
+  if (sineFlowSlider && simulationState.sineSpawnFlowRate !== undefined) {
+    sineFlowSlider.value = simulationState.sineSpawnFlowRate;
+    updateSineFlowLabel(simulationState.sineSpawnFlowRate);
+  }
+  updateSineFlowUI();
 
   const gapSlider = document.getElementById("piece-gap-slider");
   if (gapSlider && simulationState.pieceGapPercent !== undefined) {

@@ -291,15 +291,28 @@
         </div>
 
         <!-- Sine Wave Spawn Option -->
-        <div class="pt-2 border-t border-slate-100 flex items-center justify-between">
-          <span class="has-tooltip cursor-help text-slate-600 text-[11px] flex items-center gap-1.5">
-            <i class="fa-solid fa-water text-sky-500 text-[10px]"></i> 正弦波スイング投入
-            <span class="tooltip-content">全体から一斉に落とすのではなく、投入位置を左右に正弦波（波状）に揺らしながら注ぎ込みます</span>
-          </span>
-          <label class="relative inline-flex items-center cursor-pointer">
-            <input type="checkbox" id="sine-wave-spawn-toggle" checked class="sr-only peer">
-            <div class="w-8 h-4 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-sky-500"></div>
-          </label>
+        <div class="pt-2 border-t border-slate-100 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="has-tooltip cursor-help text-slate-600 text-[11px] flex items-center gap-1.5">
+              <i class="fa-solid fa-water text-sky-500 text-[10px]"></i> 正弦波スイング投入
+              <span class="tooltip-content">全体から一斉に落とすのではなく、投入位置を左右に正弦波（波状）に揺らしながら注ぎ込みます</span>
+            </span>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="sine-wave-spawn-toggle" checked class="sr-only peer">
+              <div class="w-8 h-4 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-sky-500"></div>
+            </label>
+          </div>
+
+          <!-- Sine Wave Flow Rate Slider -->
+          <div id="sine-flow-wrapper" class="pl-2 border-l-2 border-sky-300 space-y-1">
+            <div class="flex justify-between items-center text-slate-600 text-[10px]">
+              <span class="has-tooltip cursor-help">投入ペース (流速)
+                <span class="tooltip-content">1バッチあたりの投下個数。数値を下げると細い一筋の砂時計ストリームになり、上げると濃密に注がれます</span>
+              </span>
+              <span id="sine-flow-val" class="font-mono text-slate-800 font-semibold">2 (標準ストリーム)</span>
+            </div>
+            <input type="range" id="sine-flow-slider" min="1" max="8" step="1" value="2" class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-sky-500">
+          </div>
         </div>
       </div>
 
