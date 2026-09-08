@@ -3,6 +3,7 @@ import { colorPalettes } from "./constants/palettes.js";
 import {
   activeGeometricBodies,
   currentPlaybackStep,
+  getMosaicTargetBounds,
   mosaicFrameBounds,
   resetPlaybackToStart,
 } from "./physics.js";
@@ -31,6 +32,8 @@ let mp4MuxerInstance = null;
 let videoEncoderInstance = null;
 let recordedFrameCount = 0;
 let recordingCanvasElement = null;
+let recordingCropCanvas = null;
+let recordingCropContext = null;
 let recordingVisibleRect = null;
 let recordingPreDelaySteps = 0;
 
@@ -324,39 +327,29 @@ export function startCanvasVideoRecording(withResetAndDelay = null) {
   const canvasWidth = canvasElement.width;
   const canvasHeight = canvasElement.height;
   const framingMode = simulationState.recordingFramingMode || "centered";
+  const bounds = getMosaicTargetBounds() || mosaicFrameBounds;
 
   let startX = 0;
   let startY = 0;
   let width = Math.floor(canvasWidth / 2) * 2;
   let height = Math.floor(canvasHeight / 2) * 2;
 
-  if (
-    framingMode === "frame" &&
-    mosaicFrameBounds &&
-    mosaicFrameBounds.width > 0
-  ) {
+  if (framingMode === "frame" && bounds && bounds.width > 0) {
     const pad = 36;
-    const rawLeft = Math.max(0, Math.floor(mosaicFrameBounds.left - pad));
-    const rawTop = Math.max(0, Math.floor(mosaicFrameBounds.top - pad));
-    const rawRight = Math.min(
-      canvasWidth,
-      Math.ceil(mosaicFrameBounds.right + pad),
-    );
+    const rawLeft = Math.max(0, Math.floor(bounds.left - pad));
+    const rawTop = Math.max(0, Math.floor(bounds.top - pad));
+    const rawRight = Math.min(canvasWidth, Math.ceil(bounds.right + pad));
     const rawBottom = Math.min(
       canvasHeight,
-      Math.ceil(mosaicFrameBounds.bottom + pad),
+      Math.ceil(bounds.bottom + pad),
     );
     width = Math.floor((rawRight - rawLeft) / 2) * 2;
     height = Math.floor((rawBottom - rawTop) / 2) * 2;
     startX = rawLeft;
     startY = rawTop;
-  } else if (
-    framingMode === "centered" &&
-    mosaicFrameBounds &&
-    mosaicFrameBounds.centerX > 0
-  ) {
+  } else if (framingMode === "centered" && bounds && bounds.centerX > 0) {
     // ツールバーによる右偏りを相殺し、左右余白を均等にして中央配置
-    const centerX = mosaicFrameBounds.centerX;
+    const centerX = bounds.centerX;
     const maxHalfW = Math.min(centerX, canvasWidth - centerX);
     width = Math.max(320, Math.floor((maxHalfW * 2) / 2) * 2);
     startX = Math.max(0, Math.floor(centerX - width / 2));
@@ -365,6 +358,31 @@ export function startCanvasVideoRecording(withResetAndDelay = null) {
   }
 
   recordingVisibleRect = { x: startX, y: startY, width, height };
+
+  // Windows MediaFoundation等のハードウェアエンコーダがVideoFrameのvisibleRectを無視する不具合を根本回避
+  // 中間クロップキャンバスを用意し、物理的に中央揃え・額縁枠に切り出したフレームをエンコーダに供給
+  if (typeof OffscreenCanvas !== "undefined") {
+    try {
+      recordingCropCanvas = new OffscreenCanvas(width, height);
+      recordingCropContext = recordingCropCanvas.getContext("2d", {
+        alpha: false,
+        desynchronized: true,
+      });
+    } catch {
+      recordingCropCanvas = null;
+      recordingCropContext = null;
+    }
+  }
+
+  if (!recordingCropCanvas) {
+    recordingCropCanvas = document.createElement("canvas");
+    recordingCropCanvas.width = width;
+    recordingCropCanvas.height = height;
+    recordingCropContext = recordingCropCanvas.getContext("2d", {
+      alpha: false,
+      desynchronized: true,
+    });
+  }
 
   const fps = 60;
   const bitrate = 16_000_000;
@@ -489,18 +507,39 @@ export function captureCanvasFrameForRecording() {
   const timestampUs = Math.round((recordedFrameCount * 1_000_000) / 60);
 
   try {
-    const videoFrame = new VideoFrame(recordingCanvasElement, {
-      timestamp: timestampUs,
-      visibleRect: {
-        x: recordingVisibleRect.x,
-        y: recordingVisibleRect.y,
-        width: recordingVisibleRect.width,
-        height: recordingVisibleRect.height,
-      },
-    });
+    let sourceFrame = null;
+    if (recordingCropContext && recordingCropCanvas) {
+      // 物理キャンバスから指定の切り出し範囲 (startX, startY, width, height) を中間キャンバスへ転送
+      // これにより、Windows MediaFoundation等のハードウェアエンコーダがVideoFrameのvisibleRectオフセットを無視する問題を根本解決
+      recordingCropContext.drawImage(
+        recordingCanvasElement,
+        recordingVisibleRect.x,
+        recordingVisibleRect.y,
+        recordingVisibleRect.width,
+        recordingVisibleRect.height,
+        0,
+        0,
+        recordingVisibleRect.width,
+        recordingVisibleRect.height,
+      );
+      sourceFrame = new VideoFrame(recordingCropCanvas, {
+        timestamp: timestampUs,
+      });
+    } else {
+      sourceFrame = new VideoFrame(recordingCanvasElement, {
+        timestamp: timestampUs,
+        visibleRect: {
+          x: recordingVisibleRect.x,
+          y: recordingVisibleRect.y,
+          width: recordingVisibleRect.width,
+          height: recordingVisibleRect.height,
+        },
+      });
+    }
+
     const isKeyframe = recordedFrameCount % 120 === 0; // 2秒おきにキーフレーム
-    videoEncoderInstance.encode(videoFrame, { keyFrame: isKeyframe });
-    videoFrame.close();
+    videoEncoderInstance.encode(sourceFrame, { keyFrame: isKeyframe });
+    sourceFrame.close();
     recordedFrameCount++;
   } catch (error) {
     console.warn("VideoFrame capture failed:", error);
@@ -565,6 +604,8 @@ export async function stopCanvasVideoRecording() {
       });
       mp4MuxerInstance = null;
       recordingCanvasElement = null;
+      recordingCropCanvas = null;
+      recordingCropContext = null;
       recordingVisibleRect = null;
     }
   } catch (error) {
@@ -573,6 +614,9 @@ export async function stopCanvasVideoRecording() {
       `MP4書き出しに失敗しました: ${error.message}`,
       "warning",
     );
+  } finally {
+    recordingCropCanvas = null;
+    recordingCropContext = null;
   }
 }
 
