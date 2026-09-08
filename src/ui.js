@@ -674,6 +674,11 @@ export function setupUIEventListeners() {
     simulationState.isShadowActive = e.target.checked;
   });
 
+  // 録画フレーミング選択
+  safeAddEventListener("recording-framing-select", "change", (e) => {
+    simulationState.recordingFramingMode = e.target.value;
+  });
+
   // 録画系
   safeAddEventListener("record-start-button", "click", () => {
     startCanvasVideoRecording();
@@ -767,5 +772,11 @@ export function applyStateFromJsonObject(stateObj) {
     const canvasHex = document.getElementById("canvas-bg-color-hex");
     if (canvasHex)
       canvasHex.innerText = simulationState.canvasBackgroundColorHex;
+  }
+  const framingSelect = document.getElementById(
+    "recording-framing-select",
+  );
+  if (framingSelect && simulationState.recordingFramingMode) {
+    framingSelect.value = simulationState.recordingFramingMode;
   }
 }

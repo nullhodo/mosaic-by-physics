@@ -358,10 +358,22 @@
         </div>
 
         <!-- Manual Video Recording -->
-        <div class="space-y-1.5">
+        <div class="space-y-2">
           <div class="flex justify-between items-center text-[11px] text-slate-600">
             <span>MP4 ビデオ録画 (H.264 60fps)</span>
-            <span class="text-[10px] text-slate-500 font-mono">R: 開始 / S: 停止</span>
+            <span class="text-[10px] text-slate-500 font-mono">S: 停止</span>
+          </div>
+
+          <!-- Framing Mode Select -->
+          <div class="flex items-center justify-between text-[11px] text-slate-600">
+            <span class="flex items-center gap-1">
+              <i class="fa-solid fa-crop-simple text-slate-400 text-[10px]"></i> 録画フレーミング
+            </span>
+            <select id="recording-framing-select" class="text-[11px] bg-slate-50 border border-slate-200 rounded px-2 py-1 text-slate-700 font-medium cursor-pointer">
+              <option value="centered" selected>作品中央揃え (推奨)</option>
+              <option value="frame">額縁フィット (作品のみ)</option>
+              <option value="fullscreen">全画面</option>
+            </select>
           </div>
           <div class="grid grid-cols-2 gap-2">
             <button id="record-start-button" class="py-2 px-3 rounded-lg bg-red-600 hover:bg-red-500 text-white font-medium text-xs flex items-center justify-center gap-1.5 shadow-sm transition">

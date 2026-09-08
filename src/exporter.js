@@ -1,6 +1,6 @@
 import { ArrayBufferTarget, Muxer } from "mp4-muxer";
 import { colorPalettes } from "./constants/palettes.js";
-import { activeGeometricBodies } from "./physics.js";
+import { activeGeometricBodies, mosaicFrameBounds } from "./physics.js";
 import {
   drawOrganicShapeGeometry,
   getSmoothedPolygonVertices,
@@ -26,6 +26,7 @@ let mp4MuxerInstance = null;
 let videoEncoderInstance = null;
 let recordedFrameCount = 0;
 let recordingCanvasElement = null;
+let recordingVisibleRect = null;
 
 export function getIsCurrentlyRecording() {
   return isCurrentlyRecording;
@@ -313,9 +314,52 @@ export function startCanvasVideoRecording() {
     return;
   }
 
-  // H.264 (AVC) は偶数解像度 (2の倍数) が必須
-  const width = Math.floor(canvasElement.width / 2) * 2;
-  const height = Math.floor(canvasElement.height / 2) * 2;
+  // 録画フレーミングの計算（右ズレ防止・作品中央揃え）
+  const canvasWidth = canvasElement.width;
+  const canvasHeight = canvasElement.height;
+  const framingMode = simulationState.recordingFramingMode || "centered";
+
+  let startX = 0;
+  let startY = 0;
+  let width = Math.floor(canvasWidth / 2) * 2;
+  let height = Math.floor(canvasHeight / 2) * 2;
+
+  if (
+    framingMode === "frame" &&
+    mosaicFrameBounds &&
+    mosaicFrameBounds.width > 0
+  ) {
+    const pad = 36;
+    const rawLeft = Math.max(0, Math.floor(mosaicFrameBounds.left - pad));
+    const rawTop = Math.max(0, Math.floor(mosaicFrameBounds.top - pad));
+    const rawRight = Math.min(
+      canvasWidth,
+      Math.ceil(mosaicFrameBounds.right + pad),
+    );
+    const rawBottom = Math.min(
+      canvasHeight,
+      Math.ceil(mosaicFrameBounds.bottom + pad),
+    );
+    width = Math.floor((rawRight - rawLeft) / 2) * 2;
+    height = Math.floor((rawBottom - rawTop) / 2) * 2;
+    startX = rawLeft;
+    startY = rawTop;
+  } else if (
+    framingMode === "centered" &&
+    mosaicFrameBounds &&
+    mosaicFrameBounds.centerX > 0
+  ) {
+    // ツールバーによる右偏りを相殺し、左右余白を均等にして中央配置
+    const centerX = mosaicFrameBounds.centerX;
+    const maxHalfW = Math.min(centerX, canvasWidth - centerX);
+    width = Math.max(320, Math.floor((maxHalfW * 2) / 2) * 2);
+    startX = Math.max(0, Math.floor(centerX - width / 2));
+    height = Math.floor(canvasHeight / 2) * 2;
+    startY = 0;
+  }
+
+  recordingVisibleRect = { x: startX, y: startY, width, height };
+
   const fps = 60;
   const bitrate = 16_000_000;
 
@@ -411,14 +455,17 @@ export function captureCanvasFrameForRecording() {
   // エンコーダバックログ過多時の安全保護
   if (videoEncoderInstance.encodeQueueSize > 12) return;
 
-  const width = Math.floor(recordingCanvasElement.width / 2) * 2;
-  const height = Math.floor(recordingCanvasElement.height / 2) * 2;
   const timestampUs = Math.round((recordedFrameCount * 1_000_000) / 60);
 
   try {
     const videoFrame = new VideoFrame(recordingCanvasElement, {
       timestamp: timestampUs,
-      visibleRect: { x: 0, y: 0, width, height },
+      visibleRect: {
+        x: recordingVisibleRect.x,
+        y: recordingVisibleRect.y,
+        width: recordingVisibleRect.width,
+        height: recordingVisibleRect.height,
+      },
     });
     const isKeyframe = recordedFrameCount % 120 === 0; // 2秒おきにキーフレーム
     videoEncoderInstance.encode(videoFrame, { keyFrame: isKeyframe });
@@ -485,6 +532,7 @@ export async function stopCanvasVideoRecording() {
       });
       mp4MuxerInstance = null;
       recordingCanvasElement = null;
+      recordingVisibleRect = null;
     }
   } catch (error) {
     console.error("MP4 finalization failed:", error);
