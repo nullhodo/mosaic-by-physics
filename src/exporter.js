@@ -35,6 +35,9 @@ let recordingCanvasElement = null;
 let recordingCropCanvas = null;
 let recordingCropContext = null;
 let recordingVisibleRect = null;
+let recordingShiftX = 0;
+let recordingShiftY = 0;
+let recordingFramingMode = "centered";
 let recordingPreDelaySteps = 0;
 
 export function getIsCurrentlyRecording() {
@@ -67,10 +70,20 @@ export function exportHighResolutionComposition() {
     "#f8f9fa";
   exportGraphics.background(canvasBg);
 
+  const bounds = getMosaicTargetBounds() || mosaicFrameBounds;
+  const shiftX =
+    bounds && bounds.centerX > 0
+      ? bounds.centerX - window.innerWidth / 2
+      : 0;
+  const shiftY =
+    bounds && bounds.centerY > 0
+      ? bounds.centerY - window.innerHeight / 2
+      : 0;
+
   exportGraphics.push();
   exportGraphics.translate(
-    -exportTargetWidth / 2,
-    -exportTargetHeight / 2,
+    -exportTargetWidth / 2 - shiftX * scaleMultiplier,
+    -exportTargetHeight / 2 - shiftY * scaleMultiplier,
   );
   exportGraphics.scale(scaleMultiplier);
 
@@ -175,6 +188,22 @@ export function exportSvgComposition() {
 
   // 2. 床面描画（ビジュアル削除済み）
 
+  const bounds = getMosaicTargetBounds() || mosaicFrameBounds;
+  const shiftX =
+    bounds && bounds.centerX > 0
+      ? bounds.centerX - exportTargetWidth / 2
+      : 0;
+  const shiftY =
+    bounds && bounds.centerY > 0
+      ? bounds.centerY - exportTargetHeight / 2
+      : 0;
+
+  if (shiftX !== 0 || shiftY !== 0) {
+    svgParts.push(
+      `  <g transform="translate(${-shiftX.toFixed(2)}, ${-shiftY.toFixed(2)})">`,
+    );
+  }
+
   // 3. 各物理幾何学図形（Chaikin角丸め適用済みの厳密な1周パス）
   for (
     let bodyIndex = 0;
@@ -232,6 +261,10 @@ export function exportSvgComposition() {
       );
     }
 
+    svgParts.push("  </g>");
+  }
+
+  if (shiftX !== 0 || shiftY !== 0) {
     svgParts.push("  </g>");
   }
 
@@ -332,16 +365,19 @@ export function startCanvasVideoRecording(withResetAndDelay = null) {
     return;
   }
 
-  // 録画フレーミングの計算（右ズレ防止・作品中央揃え）
+  // 録画フレーミングの計算（右ズレ防止・作品完全中央揃え）
   const canvasWidth = canvasElement.width;
   const canvasHeight = canvasElement.height;
   const framingMode = simulationState.recordingFramingMode || "centered";
   const bounds = getMosaicTargetBounds() || mosaicFrameBounds;
+  recordingFramingMode = framingMode;
 
   let startX = 0;
   let startY = 0;
   let width = Math.floor(canvasWidth / 2) * 2;
   let height = Math.floor(canvasHeight / 2) * 2;
+  let shiftX = 0;
+  let shiftY = 0;
 
   if (framingMode === "frame" && bounds && bounds.width > 0) {
     const pad = 36;
@@ -356,17 +392,25 @@ export function startCanvasVideoRecording(withResetAndDelay = null) {
     height = Math.floor((rawBottom - rawTop) / 2) * 2;
     startX = rawLeft;
     startY = rawTop;
-  } else if (framingMode === "centered" && bounds && bounds.centerX > 0) {
-    // ツールバーによる右偏りを相殺し、左右余白を均等にして中央配置
-    const centerX = bounds.centerX;
-    const maxHalfW = Math.min(centerX, canvasWidth - centerX);
-    width = Math.max(320, Math.floor((maxHalfW * 2) / 2) * 2);
-    startX = Math.max(0, Math.floor(centerX - width / 2));
+    shiftX = 0;
+    shiftY = 0;
+  } else {
+    // "centered" および "fullscreen":
+    // フル画面解像度（横長ワイド画面）を100%維持しつつ、
+    // 左側ツールバーの存在による右偏り（shiftX）を相殺して作品（bounds）を動画の中心 (width/2, height/2) に完全に配置
+    width = Math.floor(canvasWidth / 2) * 2;
     height = Math.floor(canvasHeight / 2) * 2;
+    startX = 0;
     startY = 0;
+    if (bounds && bounds.centerX > 0) {
+      shiftX = Math.round(bounds.centerX - width / 2);
+      shiftY = Math.round(bounds.centerY - height / 2);
+    }
   }
 
   recordingVisibleRect = { x: startX, y: startY, width, height };
+  recordingShiftX = shiftX;
+  recordingShiftY = shiftY;
 
   // Windows MediaFoundation等のハードウェアエンコーダがVideoFrameのvisibleRectを無視する不具合を根本回避
   // 中間クロップキャンバスを用意し、物理的に中央揃え・額縁枠に切り出したフレームをエンコーダに供給
@@ -480,6 +524,8 @@ export function startCanvasVideoRecording(withResetAndDelay = null) {
       width,
       height,
       framingMode,
+      shiftX,
+      shiftY,
       delaySteps: shouldReset ? recordingPreDelaySteps : 0,
       fps,
       bitrate,
@@ -518,19 +564,38 @@ export function captureCanvasFrameForRecording() {
   try {
     let sourceFrame = null;
     if (recordingCropContext && recordingCropCanvas) {
-      // 物理キャンバスから指定の切り出し範囲 (startX, startY, width, height) を中間キャンバスへ転送
-      // これにより、Windows MediaFoundation等のハードウェアエンコーダがVideoFrameのvisibleRectオフセットを無視する問題を根本解決
-      recordingCropContext.drawImage(
-        recordingCanvasElement,
-        recordingVisibleRect.x,
-        recordingVisibleRect.y,
-        recordingVisibleRect.width,
-        recordingVisibleRect.height,
-        0,
-        0,
-        recordingVisibleRect.width,
-        recordingVisibleRect.height,
-      );
+      if (recordingFramingMode === "frame") {
+        recordingCropContext.drawImage(
+          recordingCanvasElement,
+          recordingVisibleRect.x,
+          recordingVisibleRect.y,
+          recordingVisibleRect.width,
+          recordingVisibleRect.height,
+          0,
+          0,
+          recordingVisibleRect.width,
+          recordingVisibleRect.height,
+        );
+      } else {
+        // "centered" および "fullscreen":
+        // ページ背景色で下地を均一に塗りつぶし、額縁と落下ピースを中央にオフセット描画
+        const pageBg =
+          simulationState.pageBackgroundColorHex ||
+          simulationState.backgroundColorHex ||
+          "#dedede";
+        recordingCropContext.fillStyle = pageBg;
+        recordingCropContext.fillRect(
+          0,
+          0,
+          recordingVisibleRect.width,
+          recordingVisibleRect.height,
+        );
+        recordingCropContext.drawImage(
+          recordingCanvasElement,
+          -recordingShiftX,
+          -recordingShiftY,
+        );
+      }
       sourceFrame = new VideoFrame(recordingCropCanvas, {
         timestamp: timestampUs,
       });
@@ -616,6 +681,9 @@ export async function stopCanvasVideoRecording() {
       recordingCropCanvas = null;
       recordingCropContext = null;
       recordingVisibleRect = null;
+      recordingShiftX = 0;
+      recordingShiftY = 0;
+      recordingFramingMode = "centered";
     }
   } catch (error) {
     console.error("MP4 finalization failed:", error);
@@ -626,6 +694,9 @@ export async function stopCanvasVideoRecording() {
   } finally {
     recordingCropCanvas = null;
     recordingCropContext = null;
+    recordingShiftX = 0;
+    recordingShiftY = 0;
+    recordingFramingMode = "centered";
   }
 }
 
