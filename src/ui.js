@@ -19,7 +19,7 @@ import {
   skipToCompletion,
   updatePhysicsFloorPosition,
 } from "./physics.js";
-import { markStaticLayerDirty } from "./sketch.js";
+import { isBrightBackground, markStaticLayerDirty } from "./sketch.js";
 import {
   convertHexToRgbArray,
   debugLogMessage,
@@ -429,6 +429,100 @@ function updateMosaicPreviewUI() {
   if (badge) {
     badge.innerText = `${currentProcessedImage.gridWidth}×${currentProcessedImage.gridHeight}`;
   }
+  updateDominantColorUI();
+}
+
+export function applyCanvasBackgroundColor(
+  colorHex,
+  sourceLabel = "選択色",
+) {
+  recordStateSnapshot();
+  simulationState.canvasBackgroundColorHex = colorHex;
+  simulationState.backgroundColorHex = colorHex;
+
+  const canvasBgPicker = document.getElementById("canvas-bg-color-picker");
+  if (canvasBgPicker) canvasBgPicker.value = colorHex;
+  const canvasBgHex = document.getElementById("canvas-bg-color-hex");
+  if (canvasBgHex) canvasBgHex.innerText = colorHex;
+
+  updateDominantColorUI();
+  reapplyPaletteToExistingBodies();
+  markStaticLayerDirty();
+  displayToastNotification(
+    `キャンバス背景色を ${sourceLabel} (${colorHex}) に設定しました`,
+    "info",
+  );
+}
+
+export function updateDominantColorUI() {
+  const dominantColors = currentProcessedImage.getDominantColors(8);
+  if (!dominantColors || dominantColors.length === 0) return;
+
+  const topColor = dominantColors[0];
+
+  // 1. 推定背景色 (最頻色) ボタンの表示更新
+  const domPreview = document.getElementById("dominant-color-preview");
+  if (domPreview) domPreview.style.backgroundColor = topColor.hex;
+  const domHex = document.getElementById("dominant-color-hex");
+  if (domHex) domHex.innerText = topColor.hex;
+  const domPct = document.getElementById("dominant-color-pct");
+  if (domPct) domPct.innerText = `(${topColor.percent}%)`;
+
+  const mosaicChip = document.getElementById("mosaic-dominant-color-chip");
+  if (mosaicChip) mosaicChip.style.backgroundColor = topColor.hex;
+  const mosaicDomPreview = document.getElementById(
+    "mosaic-dominant-hex-preview",
+  );
+  if (mosaicDomPreview)
+    mosaicDomPreview.innerText = `${topColor.hex} (${topColor.percent}%)`;
+
+  // 2. 減色カラースウォッチ一覧の更新
+  const container = document.getElementById(
+    "quantized-swatches-container",
+  );
+  if (!container) return;
+  container.innerHTML = "";
+
+  const activeCanvasBg = (
+    simulationState.canvasBackgroundColorHex ||
+    simulationState.backgroundColorHex ||
+    ""
+  ).toUpperCase();
+
+  for (let i = 0; i < dominantColors.length; i++) {
+    const item = dominantColors[i];
+    const isTop = i === 0;
+    const isSelected = activeCanvasBg === item.hex.toUpperCase();
+
+    const swatchBtn = document.createElement("button");
+    swatchBtn.type = "button";
+    swatchBtn.className = `w-5 h-5 rounded-md border transition-all relative flex items-center justify-center shadow-xs cursor-pointer ${
+      isSelected
+        ? "border-sky-500 ring-2 ring-sky-300 ring-offset-1 scale-110"
+        : "border-slate-300/80 hover:scale-110"
+    }`;
+    swatchBtn.style.backgroundColor = item.hex;
+    swatchBtn.title = `${item.hex} (${item.percent}%${isTop ? " - 推定背景色/最頻色" : ""}): クリックでキャンバス背景色に設定`;
+
+    const iconColor = isBrightBackground(item.hex)
+      ? "text-slate-800"
+      : "text-white";
+    if (isSelected) {
+      swatchBtn.innerHTML = `<i class="fa-solid fa-check text-[9px] ${iconColor} drop-shadow"></i>`;
+    } else if (isTop) {
+      swatchBtn.innerHTML =
+        '<i class="fa-solid fa-star text-[7px] text-amber-400 drop-shadow"></i>';
+    }
+
+    swatchBtn.addEventListener("click", () => {
+      applyCanvasBackgroundColor(
+        item.hex,
+        isTop ? "推定背景色 (最頻色)" : "減色パレット色",
+      );
+    });
+
+    container.appendChild(swatchBtn);
+  }
 }
 
 /* =========================================================================
@@ -661,7 +755,28 @@ export function setupUIEventListeners() {
     simulationState.canvasBackgroundColorHex = e.target.value;
     const hexElem = document.getElementById("canvas-bg-color-hex");
     if (hexElem) hexElem.innerText = e.target.value;
+    updateDominantColorUI();
     markStaticLayerDirty();
+  });
+
+  // 推定背景色（最頻色）クイック適用
+  safeAddEventListener("apply-dominant-bg-btn", "click", () => {
+    const dominantColors = currentProcessedImage.getDominantColors(1);
+    if (dominantColors && dominantColors.length > 0) {
+      applyCanvasBackgroundColor(
+        dominantColors[0].hex,
+        "推定背景色 (最頻色)",
+      );
+    }
+  });
+  safeAddEventListener("mosaic-apply-dominant-bg-btn", "click", () => {
+    const dominantColors = currentProcessedImage.getDominantColors(1);
+    if (dominantColors && dominantColors.length > 0) {
+      applyCanvasBackgroundColor(
+        dominantColors[0].hex,
+        "推定背景色 (最頻色)",
+      );
+    }
   });
 
   // ピース輪郭線 (フチ)
@@ -803,6 +918,7 @@ export function applyStateFromJsonObject(stateObj) {
     if (canvasHex)
       canvasHex.innerText = simulationState.canvasBackgroundColorHex;
   }
+  updateDominantColorUI();
   const framingSelect = document.getElementById(
     "recording-framing-select",
   );

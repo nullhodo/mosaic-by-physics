@@ -155,6 +155,18 @@
               </div>
             </div>
           </div>
+
+          <!-- Dominant Background Quick Apply Button -->
+          <button type="button" id="mosaic-apply-dominant-bg-btn" class="w-full py-1.5 px-2.5 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 text-[11px] font-medium flex items-center justify-between border border-slate-300 transition shadow-2xs cursor-pointer" title="画像の最頻色（背景と推定される色）をキャンバス背景色に設定">
+            <span class="flex items-center gap-1.5">
+              <i class="fa-solid fa-wand-magic-sparkles text-amber-500 text-[10px]"></i>
+              <span>最頻色をキャンバス背景に適用</span>
+            </span>
+            <span class="flex items-center gap-1.5">
+              <span id="mosaic-dominant-color-chip" class="w-3.5 h-3.5 rounded-full border border-black/15 shadow-2xs" style="background-color: #f8f9fa;"></span>
+              <span id="mosaic-dominant-hex-preview" class="font-mono text-slate-800 text-[10px] font-semibold">#FFFFFF</span>
+            </span>
+          </button>
         </div>
 
         <!-- Inline Progress Indicator (パネル内進捗表示) -->
@@ -311,6 +323,31 @@
             <div class="flex items-center gap-2">
               <span id="canvas-bg-color-hex" class="font-mono text-slate-700 text-[11px]">#F8F9FA</span>
               <input type="color" id="canvas-bg-color-picker" value="#f8f9fa" class="w-7 h-7 rounded border border-slate-300 bg-transparent cursor-pointer" title="モザイク額縁・キャンバス面の背景色">
+            </div>
+          </div>
+
+          <!-- Dominant Color (Estimated Background) Quick Selector -->
+          <div id="dominant-color-section" class="pt-1.5 border-t border-slate-100 space-y-1.5">
+            <div class="flex items-center justify-between text-[11px]">
+              <span class="text-slate-600 text-[10px] flex items-center gap-1">
+                <i class="fa-solid fa-wand-magic-sparkles text-amber-500 text-[10px]"></i> 推定背景色 (最頻色):
+              </span>
+              <button type="button" id="apply-dominant-bg-btn" class="flex items-center gap-1.5 px-2 py-0.5 rounded-md border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 text-[10px] font-medium transition shadow-xs cursor-pointer" title="画像から推定された背景色（最頻色）をキャンバス背景色に適用">
+                <span id="dominant-color-preview" class="w-3 h-3 rounded-full border border-black/15 shadow-xs" style="background-color: #f8f9fa;"></span>
+                <span id="dominant-color-hex" class="font-mono font-semibold">#FFFFFF</span>
+                <span id="dominant-color-pct" class="text-slate-400 text-[9px]">(80%)</span>
+              </button>
+            </div>
+
+            <!-- Palette Swatches from Quantized Image -->
+            <div class="space-y-1">
+              <div class="flex justify-between items-center text-[10px] text-slate-500">
+                <span>減色カラーから選択:</span>
+                <span class="text-[9px] text-slate-400">最頻順</span>
+              </div>
+              <div id="quantized-swatches-container" class="flex flex-wrap gap-1.5 items-center pt-0.5 min-h-[22px]">
+                <!-- JSで動的に追加 -->
+              </div>
             </div>
           </div>
         </div>

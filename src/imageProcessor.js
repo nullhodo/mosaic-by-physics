@@ -305,6 +305,9 @@ export class ProcessedImage {
     offscreen.height = this.gridHeight;
     const ctx = offscreen.getContext("2d", { willReadFrequently: true });
     ctx.imageSmoothingEnabled = true;
+    // 透過PNG・SVGの透明部分が黒(0,0,0)になるのを防ぐため、白背景で初期化
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, this.gridWidth, this.gridHeight);
     ctx.drawImage(this.sourceImage, 0, 0, this.gridWidth, this.gridHeight);
 
     const imgData = ctx.getImageData(
@@ -409,6 +412,57 @@ export class ProcessedImage {
     }
     this.previewCanvas = canvas;
     return canvas;
+  }
+
+  /**
+   * 減色後のグリッドセル群から、出現頻度の高い主要カラーリストを降順で算出
+   * (第0要素が最頻色＝背景と推定される色)
+   */
+  getDominantColors(limit = 8) {
+    if (!this.gridColors || this.gridColors.length === 0) {
+      return [];
+    }
+
+    const total = this.gridColors.length;
+    const isTrueColor = this.quantizeMode === "true";
+    const buckets = new Map();
+
+    for (let i = 0; i < total; i++) {
+      const c = this.gridColors[i];
+      let key = c.hex.toUpperCase();
+
+      if (isTrueColor) {
+        // True Color時はRGB各成分を16単位で丸めて背景領域の微小ノイズを吸収
+        const qr = Math.min(255, Math.round(c.r / 16) * 16);
+        const qg = Math.min(255, Math.round(c.g / 16) * 16);
+        const qb = Math.min(255, Math.round(c.b / 16) * 16);
+        key = rgbToHex(qr, qg, qb).toUpperCase();
+      }
+
+      const existing = buckets.get(key) || {
+        hex: isTrueColor ? key : c.hex.toUpperCase(),
+        r: c.r,
+        g: c.g,
+        b: c.b,
+        count: 0,
+      };
+      existing.count++;
+      buckets.set(key, existing);
+    }
+
+    const sorted = Array.from(buckets.values())
+      .sort((a, b) => b.count - a.count)
+      .slice(0, limit)
+      .map((item) => ({
+        hex: item.hex,
+        r: item.r,
+        g: item.g,
+        b: item.b,
+        count: item.count,
+        percent: Math.max(1, Math.round((item.count / total) * 100)),
+      }));
+
+    return sorted;
   }
 
   /**
