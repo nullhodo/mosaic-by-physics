@@ -275,8 +275,15 @@ export function downloadStateJsonFile(
   URL.revokeObjectURL(downloadLink.href);
 }
 
-export function importStateFromJsonFile(fileEvent, applyCallback) {
-  const selectedFile = fileEvent.target.files[0];
+export function importStateFromJsonFile(fileOrEvent, applyCallback) {
+  let selectedFile = null;
+  if (fileOrEvent instanceof File || fileOrEvent instanceof Blob) {
+    selectedFile = fileOrEvent;
+  } else if (fileOrEvent?.target?.files?.[0]) {
+    selectedFile = fileOrEvent.target.files[0];
+  } else if (fileOrEvent?.files?.[0]) {
+    selectedFile = fileOrEvent.files[0];
+  }
   if (!selectedFile) return;
 
   const fileReader = new FileReader();
@@ -294,7 +301,9 @@ export function importStateFromJsonFile(fileEvent, applyCallback) {
         );
         debugLogMessage("State Restored from JSON", parsedData.parameters);
       } else {
-        throw new Error("無効なJSON形式です");
+        throw new Error(
+          "無効なJSON形式です (parameters が見つかりません)",
+        );
       }
     } catch (error) {
       displayToastNotification(

@@ -889,7 +889,8 @@ export function setupUIEventListeners() {
   );
   safeAddEventListener("import-json-input", "change", (e) => {
     if (e.target.files?.[0]) {
-      importStateFromJsonFile(e.target.files[0]);
+      importStateFromJsonFile(e.target.files[0], applyStateFromJsonObject);
+      e.target.value = "";
     }
   });
 
@@ -897,13 +898,14 @@ export function setupUIEventListeners() {
   loadMosaicSample("pearl_earring");
 }
 
-export function applyStateFromJsonObject(stateObj) {
+export function applyStateFromJsonObject(stateObj, autoRebake = true) {
   Object.assign(simulationState, stateObj);
   setSimulationDisplayMode(simulationState.is3DMode);
   setDebugDisplayMode(simulationState.isDebugMode);
   updatePhysicsFloorPosition();
   markStaticLayerDirty();
 
+  // 1. 再生速度 (Playback speed)
   const currentSpeed = simulationState.playbackSpeed ?? 0.5;
   const speedButtons = document.querySelectorAll(
     "#playback-speed-group .speed-btn",
@@ -919,11 +921,60 @@ export function applyStateFromJsonObject(stateObj) {
     }
   }
 
+  // 2. 形状・物理特性 (Shape & Physics)
   const sSlider = document.getElementById("shape-size-slider");
-  if (sSlider && simulationState.shapeBaseRadius) {
+  if (sSlider && simulationState.shapeBaseRadius !== undefined) {
     sSlider.value = simulationState.shapeBaseRadius;
     const sVal = document.getElementById("shape-size-val");
     if (sVal) sVal.innerText = simulationState.shapeBaseRadius;
+  }
+
+  const varSlider = document.getElementById("shape-size-variation-slider");
+  if (
+    varSlider &&
+    simulationState.shapeSizeVariationPercent !== undefined
+  ) {
+    varSlider.value = simulationState.shapeSizeVariationPercent;
+    const vVal = document.getElementById("shape-size-variation-val");
+    if (vVal)
+      vVal.innerText = `${simulationState.shapeSizeVariationPercent}%`;
+  }
+
+  const vertexSlider = document.getElementById("shape-vertex-slider");
+  if (vertexSlider && simulationState.shapeVertexCount !== undefined) {
+    vertexSlider.value = simulationState.shapeVertexCount;
+    const vxVal = document.getElementById("shape-vertex-val");
+    if (vxVal) vxVal.innerText = simulationState.shapeVertexCount;
+  }
+
+  const curveSlider = document.getElementById("shape-curve-slider");
+  if (curveSlider && simulationState.shapeCurvaturePercent !== undefined) {
+    curveSlider.value = simulationState.shapeCurvaturePercent;
+    const cVal = document.getElementById("shape-curve-val");
+    if (cVal) cVal.innerText = `${simulationState.shapeCurvaturePercent}%`;
+  }
+
+  const gravSlider = document.getElementById("gravity-slider");
+  if (gravSlider && simulationState.gravityForce !== undefined) {
+    gravSlider.value = Math.round(simulationState.gravityForce * 10);
+    const grVal = document.getElementById("gravity-val");
+    if (grVal) grVal.innerText = simulationState.gravityForce.toFixed(1);
+    if (physicsWorldInstance)
+      physicsWorldInstance.gravity.y = simulationState.gravityForce;
+  }
+
+  const restSlider = document.getElementById("restitution-slider");
+  if (restSlider && simulationState.restitutionCoeff !== undefined) {
+    restSlider.value = Math.round(simulationState.restitutionCoeff * 100);
+    const rVal = document.getElementById("restitution-val");
+    if (rVal) rVal.innerText = simulationState.restitutionCoeff.toFixed(2);
+  }
+
+  const gapSlider = document.getElementById("piece-gap-slider");
+  if (gapSlider && simulationState.pieceGapPercent !== undefined) {
+    gapSlider.value = simulationState.pieceGapPercent;
+    const gVal = document.getElementById("piece-gap-val");
+    if (gVal) gVal.innerText = `${simulationState.pieceGapPercent}%`;
   }
 
   const sineToggle = document.getElementById("sine-wave-spawn-toggle");
@@ -937,13 +988,7 @@ export function applyStateFromJsonObject(stateObj) {
   }
   updateSineFlowUI();
 
-  const gapSlider = document.getElementById("piece-gap-slider");
-  if (gapSlider && simulationState.pieceGapPercent !== undefined) {
-    gapSlider.value = simulationState.pieceGapPercent;
-    const gVal = document.getElementById("piece-gap-val");
-    if (gVal) gVal.innerText = `${simulationState.pieceGapPercent}%`;
-  }
-
+  // 3. 演出・マテリアル (Appearance & Material)
   const borderToggle = document.getElementById("piece-borders-checkbox");
   if (borderToggle && simulationState.showPieceBorders !== undefined) {
     borderToggle.checked = simulationState.showPieceBorders;
@@ -968,6 +1013,26 @@ export function applyStateFromJsonObject(stateObj) {
       canvasHex.innerText = simulationState.canvasBackgroundColorHex;
   }
   updateDominantColorUI();
+
+  const grainToggle = document.getElementById("grain-checkbox");
+  if (grainToggle && simulationState.isGrainActive !== undefined) {
+    grainToggle.checked = simulationState.isGrainActive;
+  }
+
+  const grainSlider = document.getElementById("grain-slider");
+  if (grainSlider && simulationState.grainIntensityPercent !== undefined) {
+    grainSlider.value = simulationState.grainIntensityPercent;
+    const grVal = document.getElementById("grain-val");
+    if (grVal)
+      grVal.innerText = `${simulationState.grainIntensityPercent}%`;
+  }
+
+  const shadowToggle = document.getElementById("shadow-checkbox");
+  if (shadowToggle && simulationState.isShadowActive !== undefined) {
+    shadowToggle.checked = simulationState.isShadowActive;
+  }
+
+  // 4. 録画設定 (Recording settings)
   const framingSelect = document.getElementById(
     "recording-framing-select",
   );
@@ -984,10 +1049,47 @@ export function applyStateFromJsonObject(stateObj) {
     resetDelayToggle.checked = simulationState.recordingResetAndDelay;
   }
   const delaySlider = document.getElementById("record-delay-slider");
-  if (delaySlider && simulationState.recordingDelaySeconds) {
+  if (delaySlider && simulationState.recordingDelaySeconds !== undefined) {
     delaySlider.value = simulationState.recordingDelaySeconds;
     const dVal = document.getElementById("record-delay-val");
     if (dVal)
       dVal.innerText = `${simulationState.recordingDelaySeconds.toFixed(1)}秒`;
+  }
+
+  // 5. 画像・減色設定 (Image & Quantize settings)
+  const quantizeSelect = document.getElementById("quantize-mode-select");
+  if (quantizeSelect && simulationState.quantizeMode) {
+    quantizeSelect.value = simulationState.quantizeMode;
+  }
+
+  const quantColorsSlider = document.getElementById(
+    "quantize-colors-slider",
+  );
+  if (
+    quantColorsSlider &&
+    simulationState.paletteColorsCount !== undefined
+  ) {
+    quantColorsSlider.value = simulationState.paletteColorsCount;
+    const qcVal = document.getElementById("quantize-colors-val");
+    if (qcVal) qcVal.innerText = simulationState.paletteColorsCount;
+  }
+
+  const sampleDropdown = document.getElementById("mosaic-sample-dropdown");
+  if (sampleDropdown && simulationState.selectedSampleId) {
+    sampleDropdown.value = simulationState.selectedSampleId;
+  }
+
+  // 6. 画像の再ロードまたは物理ベイクの再実行
+  if (autoRebake) {
+    const currentDropdownVal = sampleDropdown?.value;
+    if (
+      simulationState.selectedSampleId &&
+      simulationState.selectedSampleId !== "custom_upload" &&
+      simulationState.selectedSampleId !== currentDropdownVal
+    ) {
+      loadMosaicSample(simulationState.selectedSampleId);
+    } else if (currentProcessedImage.sourceImage) {
+      runMosaicProcessAndBake();
+    }
   }
 }
