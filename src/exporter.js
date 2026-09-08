@@ -1,6 +1,11 @@
 import { ArrayBufferTarget, Muxer } from "mp4-muxer";
 import { colorPalettes } from "./constants/palettes.js";
-import { activeGeometricBodies, mosaicFrameBounds } from "./physics.js";
+import {
+  activeGeometricBodies,
+  currentPlaybackStep,
+  mosaicFrameBounds,
+  resetPlaybackToStart,
+} from "./physics.js";
 import {
   drawOrganicShapeGeometry,
   getSmoothedPolygonVertices,
@@ -27,6 +32,7 @@ let videoEncoderInstance = null;
 let recordedFrameCount = 0;
 let recordingCanvasElement = null;
 let recordingVisibleRect = null;
+let recordingPreDelaySteps = 0;
 
 export function getIsCurrentlyRecording() {
   return isCurrentlyRecording;
@@ -297,7 +303,7 @@ export function importStateFromJsonFile(fileEvent, applyCallback) {
   fileReader.readAsText(selectedFile);
 }
 
-export function startCanvasVideoRecording() {
+export function startCanvasVideoRecording(withResetAndDelay = null) {
   if (isCurrentlyRecording) return;
 
   const canvasElement = document.querySelector("#canvas-container canvas");
@@ -363,6 +369,21 @@ export function startCanvasVideoRecording() {
   const fps = 60;
   const bitrate = 16_000_000;
 
+  // リセット＆ディレイ判定
+  const shouldReset =
+    withResetAndDelay !== null
+      ? withResetAndDelay
+      : simulationState.recordingResetAndDelay;
+
+  if (shouldReset) {
+    const delaySec = simulationState.recordingDelaySeconds ?? 1.0;
+    const delaySteps = Math.max(15, Math.round(delaySec * fps));
+    recordingPreDelaySteps = delaySteps;
+    resetPlaybackToStart(delaySteps);
+  } else {
+    recordingPreDelaySteps = 0;
+  }
+
   try {
     mp4MuxerInstance = new Muxer({
       target: new ArrayBufferTarget(),
@@ -408,6 +429,10 @@ export function startCanvasVideoRecording() {
     if (hud) hud.classList.remove("hidden");
     const startBtn = document.getElementById("record-start-button");
     if (startBtn) startBtn.disabled = true;
+    const resetRecBtn = document.getElementById(
+      "record-reset-start-button",
+    );
+    if (resetRecBtn) resetRecBtn.disabled = true;
     const stopBtn = document.getElementById("record-stop-button");
     if (stopBtn) {
       stopBtn.disabled = false;
@@ -420,13 +445,15 @@ export function startCanvasVideoRecording() {
     }
 
     recordingTimerInterval = setInterval(updateRecordingTimerHUD, 100);
-    displayToastNotification(
-      "MP4録画を開始しました [Sキーで停止]",
-      "info",
-    );
+    const startMsg = shouldReset
+      ? "リセット＆ディレイMP4録画を開始しました [Sキーで停止]"
+      : "MP4録画を開始しました [Sキーで停止]";
+    displayToastNotification(startMsg, "info");
     debugLogMessage("MP4 Recording Started", {
       width,
       height,
+      framingMode,
+      delaySteps: shouldReset ? recordingPreDelaySteps : 0,
       fps,
       bitrate,
     });
@@ -437,6 +464,10 @@ export function startCanvasVideoRecording() {
       "warning",
     );
   }
+}
+
+export function startResetCanvasVideoRecording() {
+  startCanvasVideoRecording(true);
 }
 
 /**
@@ -485,6 +516,8 @@ export async function stopCanvasVideoRecording() {
   if (hud) hud.classList.add("hidden");
   const startBtn = document.getElementById("record-start-button");
   if (startBtn) startBtn.disabled = false;
+  const resetRecBtn = document.getElementById("record-reset-start-button");
+  if (resetRecBtn) resetRecBtn.disabled = false;
   const stopBtn = document.getElementById("record-stop-button");
   if (stopBtn) {
     stopBtn.disabled = true;
@@ -544,6 +577,15 @@ export async function stopCanvasVideoRecording() {
 }
 
 function updateRecordingTimerHUD() {
+  const timeElem = document.getElementById("recording-time-display");
+  if (!timeElem) return;
+
+  if (currentPlaybackStep < 0) {
+    const remainingSec = (-currentPlaybackStep / 60).toFixed(1);
+    timeElem.innerText = `待機中... ${remainingSec}s`;
+    return;
+  }
+
   const elapsedMilliseconds = Date.now() - recordingStartTime;
   const totalSeconds = Math.floor(elapsedMilliseconds / 1000);
   const minutes = Math.floor(totalSeconds / 60);
@@ -551,8 +593,7 @@ function updateRecordingTimerHUD() {
   const deciseconds = Math.floor((elapsedMilliseconds % 1000) / 100);
 
   const timeString = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}.${deciseconds}`;
-  const timeElem = document.getElementById("recording-time-display");
-  if (timeElem) timeElem.innerText = timeString;
+  timeElem.innerText = timeString;
 }
 
 export function startNLoopRecording(

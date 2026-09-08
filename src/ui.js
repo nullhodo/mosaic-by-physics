@@ -5,6 +5,7 @@ import {
   getIsCurrentlyRecording,
   importStateFromJsonFile,
   startCanvasVideoRecording,
+  startResetCanvasVideoRecording,
   stopCanvasVideoRecording,
 } from "./exporter.js";
 import { SAMPLE_IMAGES, currentProcessedImage } from "./imageProcessor.js";
@@ -679,9 +680,25 @@ export function setupUIEventListeners() {
     simulationState.recordingFramingMode = e.target.value;
   });
 
+  // 録画時リセット＆ディレイトグル
+  safeAddEventListener("record-reset-delay-checkbox", "change", (e) => {
+    simulationState.recordingResetAndDelay = e.target.checked;
+  });
+
+  // 録画待機秒数スライダー
+  safeAddEventListener("record-delay-slider", "input", (e) => {
+    const val = Number.parseFloat(e.target.value);
+    simulationState.recordingDelaySeconds = val;
+    const valElem = document.getElementById("record-delay-val");
+    if (valElem) valElem.innerText = `${val.toFixed(1)}秒`;
+  });
+
   // 録画系
   safeAddEventListener("record-start-button", "click", () => {
     startCanvasVideoRecording();
+  });
+  safeAddEventListener("record-reset-start-button", "click", () => {
+    startResetCanvasVideoRecording();
   });
   safeAddEventListener("record-stop-button", "click", () => {
     stopCanvasVideoRecording();
@@ -778,5 +795,21 @@ export function applyStateFromJsonObject(stateObj) {
   );
   if (framingSelect && simulationState.recordingFramingMode) {
     framingSelect.value = simulationState.recordingFramingMode;
+  }
+  const resetDelayToggle = document.getElementById(
+    "record-reset-delay-checkbox",
+  );
+  if (
+    resetDelayToggle &&
+    simulationState.recordingResetAndDelay !== undefined
+  ) {
+    resetDelayToggle.checked = simulationState.recordingResetAndDelay;
+  }
+  const delaySlider = document.getElementById("record-delay-slider");
+  if (delaySlider && simulationState.recordingDelaySeconds) {
+    delaySlider.value = simulationState.recordingDelaySeconds;
+    const dVal = document.getElementById("record-delay-val");
+    if (dVal)
+      dVal.innerText = `${simulationState.recordingDelaySeconds.toFixed(1)}秒`;
   }
 }

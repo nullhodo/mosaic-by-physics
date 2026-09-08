@@ -375,14 +375,34 @@
               <option value="fullscreen">全画面</option>
             </select>
           </div>
-          <div class="grid grid-cols-2 gap-2">
-            <button id="record-start-button" class="py-2 px-3 rounded-lg bg-red-600 hover:bg-red-500 text-white font-medium text-xs flex items-center justify-center gap-1.5 shadow-sm transition">
+
+          <!-- Reset & Delay Option Toggle -->
+          <div class="pt-1.5 space-y-1.5 border-t border-slate-100">
+            <div class="flex items-center justify-between">
+              <span class="text-slate-700 text-[11px] flex items-center gap-1.5 has-tooltip cursor-help">
+                <i class="fa-solid fa-hourglass-start text-amber-500 text-xs"></i> 録画時リセット＆待機
+                <span class="tooltip-content">録画開始時にピースを初期化し、指定秒数静止してから降下開始</span>
+              </span>
+              <input type="checkbox" id="record-reset-delay-checkbox" checked class="w-4 h-4 rounded text-sky-500 bg-slate-50 border-slate-300 cursor-pointer">
+            </div>
+            <div id="record-delay-slider-wrapper" class="flex items-center justify-between text-[11px] text-slate-600 pl-4">
+              <span>待機時間: <span id="record-delay-val" class="font-mono text-slate-800 font-semibold">1.0秒</span></span>
+              <input type="range" id="record-delay-slider" min="0.5" max="3.0" step="0.5" value="1.0" class="w-24 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-sky-500">
+            </div>
+          </div>
+
+          <!-- Recording Trigger Buttons -->
+          <div class="grid grid-cols-2 gap-2 pt-1">
+            <button id="record-start-button" class="py-2 px-2 rounded-lg bg-red-600 hover:bg-red-500 text-white font-medium text-xs flex items-center justify-center gap-1.5 shadow-sm transition">
               <i class="fa-solid fa-video"></i> 録画開始
             </button>
-            <button id="record-stop-button" disabled class="py-2 px-3 rounded-lg bg-slate-100 text-slate-400 font-medium text-xs flex items-center justify-center gap-1.5 cursor-not-allowed border border-slate-200">
-              <i class="fa-solid fa-stop"></i> 録画停止
+            <button id="record-reset-start-button" class="py-2 px-2 rounded-lg bg-amber-600 hover:bg-amber-500 text-white font-medium text-xs flex items-center justify-center gap-1.5 shadow-sm transition" title="ピースを初期化・1秒静止待機してから降下録画">
+              <i class="fa-solid fa-rotate-left"></i> リセット録画
             </button>
           </div>
+          <button id="record-stop-button" disabled class="w-full py-1.5 px-3 rounded-lg bg-slate-100 text-slate-400 font-medium text-xs flex items-center justify-center gap-1.5 cursor-not-allowed border border-slate-200">
+            <i class="fa-solid fa-stop"></i> 録画停止 (Sキー)
+          </button>
         </div>
 
         <!-- High-Res Image & Vector SVG Export -->

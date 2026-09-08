@@ -18,6 +18,8 @@ export const simulationState = {
   canvasBackgroundColorHex: "#f8f9fa",
   backgroundColorHex: "#dedede",
   showPieceBorders: true,
+  recordingDelaySeconds: 1.0,
+  recordingResetAndDelay: true,
   recordingFramingMode: "centered",
   isGrainActive: true,
   grainIntensityPercent: 18,

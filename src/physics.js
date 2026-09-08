@@ -943,8 +943,8 @@ export function advanceMosaicPlayback(speed = 1.0) {
   }
 }
 
-export function resetPlaybackToStart() {
-  currentPlaybackStep = 0;
+export function resetPlaybackToStart(delaySteps = 0) {
+  currentPlaybackStep = -Math.max(0, delaySteps);
   isMosaicPlaybackComplete = false;
   isMosaicActive = true;
   for (let i = 0; i < activeGeometricBodies.length; i++) {
