@@ -658,10 +658,10 @@ export async function bakeMosaicPhysics(onProgress = null) {
       for (let b = 0; b < bakeBodies.length; b++) {
         const body = bakeBodies[b];
         const desc = descriptors[body.descIndex];
-        // スポーンから十分時間 (30ステップ以上) が経過し、額縁天面付近に静止しているピースのみ対象
+        // スポーンから十分時間 (30ステップ以上) が経過し、額縁天面付近 (内側) に静止しているピースのみ対象
         if (
           step - desc.spawnStep >= 30 &&
-          body.position.y >= bounds.top - baseRadius * 1.5 &&
+          body.position.y >= bounds.top + baseRadius * 0.2 &&
           body.position.y <= topThresholdY &&
           body.position.x >= bounds.left - 10 &&
           body.position.x <= bounds.right + 10 &&
@@ -825,7 +825,6 @@ export async function bakeMosaicPhysics(onProgress = null) {
   await new Promise((resolve) => setTimeout(resolve, 10));
 
   const validDescriptors = [];
-  const topLimit = bounds.top - baseRadius * 0.15;
   const bottomLimit = bounds.bottom + baseRadius * 0.5;
   const leftLimit = bounds.left - baseRadius * 0.5;
   const rightLimit = bounds.right + baseRadius * 0.5;
@@ -834,9 +833,11 @@ export async function bakeMosaicPhysics(onProgress = null) {
     const body = bakeBodies[b];
     const desc = descriptors[body.descIndex];
 
-    // 額縁の上端より上にあふれたピース、または左右・底面枠外のピースを除外
+    // 額縁の上端枠線からはみ出たピース、または左右・底面枠外のピースを除外
+    // ピースの描画ポリゴン外接半径 (約0.75倍) を加味し、上端 bounds.top を超えて飛び出たピースを完全に削除
+    const visualTopY = body.position.y - desc.radius * 0.75;
     if (
-      body.position.y < topLimit ||
+      visualTopY < bounds.top ||
       body.position.y > bottomLimit ||
       body.position.x < leftLimit ||
       body.position.x > rightLimit
