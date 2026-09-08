@@ -35,7 +35,7 @@ export const simulationState = {
   paletteColorsCount: 8,
   retroTheme: "gameboy",
   appPhase: "idle",
-  playbackSpeed: 1.0,
+  playbackSpeed: 0.5,
 };
 
 export const randomizeFilters = {

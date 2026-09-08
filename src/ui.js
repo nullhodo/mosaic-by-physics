@@ -733,7 +733,7 @@ export function applyStateFromJsonObject(stateObj) {
   updatePhysicsFloorPosition();
   markStaticLayerDirty();
 
-  const currentSpeed = simulationState.playbackSpeed || 1.0;
+  const currentSpeed = simulationState.playbackSpeed ?? 0.5;
   const speedButtons = document.querySelectorAll(
     "#playback-speed-group .speed-btn",
   );

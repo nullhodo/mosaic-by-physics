@@ -96,7 +96,7 @@ export const sketchDefinition = (p) => {
 
   p.draw = () => {
     const frameStart = performance.now();
-    const speed = simulationState.playbackSpeed || 1.0;
+    const speed = simulationState.playbackSpeed ?? 0.5;
 
     // 演算は事前ベイクで完全完了しているため、実行時の物理シミュレーションは一切行わない！
     // 事前計算された完全な物理軌跡をそのまま再生（タイムライン再生）
