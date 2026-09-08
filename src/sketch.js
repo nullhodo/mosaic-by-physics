@@ -102,7 +102,11 @@ export const sketchDefinition = (p) => {
     // 事前計算された完全な物理軌跡をそのまま再生（タイムライン再生）
     advanceMosaicPlayback(speed);
 
-    p.background(simulationState.backgroundColorHex);
+    const pageBg =
+      simulationState.pageBackgroundColorHex ||
+      simulationState.backgroundColorHex ||
+      "#dedede";
+    p.background(pageBg);
 
     p.push();
     p.translate(-p.width / 2, -p.height / 2);
@@ -202,29 +206,32 @@ export function renderMosaicFrameBackground(p) {
   if (!mosaicFrameBounds || mosaicFrameBounds.width <= 0) return;
 
   const { left, top, width, height } = mosaicFrameBounds;
-  const isLight = isBrightBackground(simulationState.backgroundColorHex);
+  const pageBg =
+    simulationState.pageBackgroundColorHex ||
+    simulationState.backgroundColorHex ||
+    "#dedede";
+  const canvasBg = simulationState.canvasBackgroundColorHex || "#f8f9fa";
+  const isPageLight = isBrightBackground(pageBg);
 
-  if (isLight) {
-    // ライトテーマ用：上品で柔らかなアンビエントシャドウと白系アクリルパネル
+  if (isPageLight) {
+    // ライトテーマ用：上品で柔らかなアンビエントシャドウ
     p.noStroke();
     p.fill(0, 0, 0, 30);
     p.rect(left - 8, top - 6, width + 16, height + 16, 14);
 
     p.fill(0, 0, 0, 15);
     p.rect(left - 4, top - 3, width + 8, height + 8, 10);
-
-    // アクリルバックパネル (清潔なオフホワイト)
-    p.fill(250, 250, 252, 235);
-    p.rect(left, top, width, height, 8);
   } else {
-    // ダークテーマ用：濃紺アクリルパネル
+    // ダークテーマ用：濃紺アンビエントシャドウ
     p.noStroke();
     p.fill(0, 0, 0, 75);
     p.rect(left - 6, top - 6, width + 12, height + 12, 12);
-
-    p.fill(10, 15, 30, 190);
-    p.rect(left, top, width, height, 8);
   }
+
+  // アクリルバックパネル (ユーザー設定のキャンバス背景色)
+  p.noStroke();
+  p.fill(canvasBg);
+  p.rect(left, top, width, height, 8);
 }
 
 /**
@@ -234,7 +241,8 @@ export function renderMosaicFrameForeground(p) {
   if (!mosaicFrameBounds || mosaicFrameBounds.width <= 0) return;
 
   const { left, right, top, bottom, width, height } = mosaicFrameBounds;
-  const isLight = isBrightBackground(simulationState.backgroundColorHex);
+  const canvasBg = simulationState.canvasBackgroundColorHex || "#f8f9fa";
+  const isLight = isBrightBackground(canvasBg);
 
   p.noFill();
 

@@ -153,26 +153,31 @@ export function renderPaletteSwatches() {
     swatchButton.style.backgroundColor = colorItem.hex;
     swatchButton.title = `${colorItem.name}: クリックで背景色に設定`;
 
-    if (
-      simulationState.backgroundColorHex.toLowerCase() ===
-      colorItem.hex.toLowerCase()
-    ) {
+    const activeCanvasBg = (
+      simulationState.canvasBackgroundColorHex ||
+      simulationState.backgroundColorHex ||
+      ""
+    ).toLowerCase();
+    if (activeCanvasBg === colorItem.hex.toLowerCase()) {
       swatchButton.innerHTML =
         '<i class="fa-solid fa-check text-[10px] text-white drop-shadow"></i>';
     }
 
     swatchButton.addEventListener("click", () => {
       recordStateSnapshot();
+      simulationState.canvasBackgroundColorHex = colorItem.hex;
       simulationState.backgroundColorHex = colorItem.hex;
-      const bgPicker = document.getElementById("bg-color-picker");
-      if (bgPicker) bgPicker.value = colorItem.hex;
-      const bgHex = document.getElementById("bg-color-hex");
-      if (bgHex) bgHex.innerText = colorItem.hex;
+      const canvasBgPicker = document.getElementById(
+        "canvas-bg-color-picker",
+      );
+      if (canvasBgPicker) canvasBgPicker.value = colorItem.hex;
+      const canvasBgHex = document.getElementById("canvas-bg-color-hex");
+      if (canvasBgHex) canvasBgHex.innerText = colorItem.hex;
       renderPaletteSwatches();
       reapplyPaletteToExistingBodies();
       markStaticLayerDirty();
       displayToastNotification(
-        `背景色を ${colorItem.name} に設定しました`,
+        `キャンバス背景色を ${colorItem.name} に設定しました`,
         "info",
       );
     });
@@ -256,6 +261,7 @@ export function generateMonochromaticThemeFromColor(baseColorHex) {
 
   colorPalettes.push(dynamicPalette);
   simulationState.activePaletteIndex = colorPalettes.length - 1;
+  simulationState.canvasBackgroundColorHex = gradientColors[0].hex;
   simulationState.backgroundColorHex = gradientColors[0].hex;
 
   populatePaletteDropdown();
@@ -263,10 +269,14 @@ export function generateMonochromaticThemeFromColor(baseColorHex) {
   if (dropdown) dropdown.value = simulationState.activePaletteIndex;
   renderPaletteSwatches();
 
-  const bgPicker = document.getElementById("bg-color-picker");
-  if (bgPicker) bgPicker.value = simulationState.backgroundColorHex;
-  const bgHex = document.getElementById("bg-color-hex");
-  if (bgHex) bgHex.innerText = simulationState.backgroundColorHex;
+  const canvasBgPicker = document.getElementById("canvas-bg-color-picker");
+  if (canvasBgPicker) {
+    canvasBgPicker.value = simulationState.canvasBackgroundColorHex;
+  }
+  const canvasBgHex = document.getElementById("canvas-bg-color-hex");
+  if (canvasBgHex) {
+    canvasBgHex.innerText = simulationState.canvasBackgroundColorHex;
+  }
 
   reapplyPaletteToExistingBodies();
   markStaticLayerDirty();
@@ -622,10 +632,21 @@ export function setupUIEventListeners() {
   });
 
   // 背景色ピッカー
-  safeAddEventListener("bg-color-picker", "input", (e) => {
+  // ページ背景色ピッカー
+  safeAddEventListener("page-bg-color-picker", "input", (e) => {
+    simulationState.pageBackgroundColorHex = e.target.value;
     simulationState.backgroundColorHex = e.target.value;
-    const bgHex = document.getElementById("bg-color-hex");
-    if (bgHex) bgHex.innerText = e.target.value;
+    const hexElem = document.getElementById("page-bg-color-hex");
+    if (hexElem) hexElem.innerText = e.target.value;
+    document.body.style.backgroundColor = e.target.value;
+    markStaticLayerDirty();
+  });
+
+  // キャンバス背景色ピッカー
+  safeAddEventListener("canvas-bg-color-picker", "input", (e) => {
+    simulationState.canvasBackgroundColorHex = e.target.value;
+    const hexElem = document.getElementById("canvas-bg-color-hex");
+    if (hexElem) hexElem.innerText = e.target.value;
     markStaticLayerDirty();
   });
 
@@ -727,5 +748,24 @@ export function applyStateFromJsonObject(stateObj) {
   const borderToggle = document.getElementById("piece-borders-checkbox");
   if (borderToggle && simulationState.showPieceBorders !== undefined) {
     borderToggle.checked = simulationState.showPieceBorders;
+  }
+
+  if (simulationState.pageBackgroundColorHex) {
+    const pagePicker = document.getElementById("page-bg-color-picker");
+    if (pagePicker)
+      pagePicker.value = simulationState.pageBackgroundColorHex;
+    const pageHex = document.getElementById("page-bg-color-hex");
+    if (pageHex)
+      pageHex.innerText = simulationState.pageBackgroundColorHex;
+    document.body.style.backgroundColor =
+      simulationState.pageBackgroundColorHex;
+  }
+  if (simulationState.canvasBackgroundColorHex) {
+    const canvasPicker = document.getElementById("canvas-bg-color-picker");
+    if (canvasPicker)
+      canvasPicker.value = simulationState.canvasBackgroundColorHex;
+    const canvasHex = document.getElementById("canvas-bg-color-hex");
+    if (canvasHex)
+      canvasHex.innerText = simulationState.canvasBackgroundColorHex;
   }
 }

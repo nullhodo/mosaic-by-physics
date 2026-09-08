@@ -51,7 +51,11 @@ export function exportHighResolutionComposition() {
   const scaleMultiplier = exportTargetWidth / window.innerWidth;
 
   exportGraphics.pixelDensity(1);
-  exportGraphics.background(simulationState.backgroundColorHex);
+  const canvasBg =
+    simulationState.canvasBackgroundColorHex ||
+    simulationState.backgroundColorHex ||
+    "#f8f9fa";
+  exportGraphics.background(canvasBg);
 
   exportGraphics.push();
   exportGraphics.translate(
@@ -149,9 +153,14 @@ export function exportSvgComposition() {
     `<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="${exportTargetWidth}" height="${exportTargetHeight}" viewBox="0 0 ${exportTargetWidth} ${exportTargetHeight}">`,
   );
 
+  const canvasBg =
+    simulationState.canvasBackgroundColorHex ||
+    simulationState.backgroundColorHex ||
+    "#f8f9fa";
+
   // 1. 背景矩形
   svgParts.push(
-    `  <rect width="100%" height="100%" fill="${simulationState.backgroundColorHex}" />`,
+    `  <rect width="100%" height="100%" fill="${canvasBg}" />`,
   );
 
   // 2. 床面描画（ビジュアル削除済み）

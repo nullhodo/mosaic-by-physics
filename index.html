@@ -297,12 +297,21 @@
           <i class="fa-solid fa-wand-magic text-purple-500 text-xs"></i> 演出・マテリアル
         </div>
 
-        <!-- Custom Background Color Picker -->
-        <div class="flex items-center justify-between">
-          <span class="text-slate-600 text-[11px]">背景色</span>
-          <div class="flex items-center gap-2">
-            <span id="bg-color-hex" class="font-mono text-slate-700 text-[11px]">#DEDEDE</span>
-            <input type="color" id="bg-color-picker" value="#dedede" class="w-7 h-7 rounded border border-slate-300 bg-transparent cursor-pointer">
+        <!-- Custom Background Color Pickers (Page & Canvas) -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-slate-600 text-[11px]">ページ背景色</span>
+            <div class="flex items-center gap-2">
+              <span id="page-bg-color-hex" class="font-mono text-slate-700 text-[11px]">#DEDEDE</span>
+              <input type="color" id="page-bg-color-picker" value="#dedede" class="w-7 h-7 rounded border border-slate-300 bg-transparent cursor-pointer" title="Webページ全体の背景色">
+            </div>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-slate-600 text-[11px]">キャンバス背景色</span>
+            <div class="flex items-center gap-2">
+              <span id="canvas-bg-color-hex" class="font-mono text-slate-700 text-[11px]">#F8F9FA</span>
+              <input type="color" id="canvas-bg-color-picker" value="#f8f9fa" class="w-7 h-7 rounded border border-slate-300 bg-transparent cursor-pointer" title="モザイク額縁・キャンバス面の背景色">
+            </div>
           </div>
         </div>
 

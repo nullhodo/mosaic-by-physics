@@ -14,6 +14,8 @@ export const simulationState = {
   pieceGapPercent: 12,
   isSineWaveSpawnActive: true,
   activePaletteIndex: 1,
+  pageBackgroundColorHex: "#dedede",
+  canvasBackgroundColorHex: "#f8f9fa",
   backgroundColorHex: "#dedede",
   showPieceBorders: true,
   isGrainActive: true,
