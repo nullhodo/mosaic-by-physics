@@ -334,8 +334,12 @@ export function renderSceneIn2D(p) {
     p.scale(gapScale);
 
     p.fill(graphicsData.fillColor);
-    p.stroke(255, 255, 255, 45);
-    p.strokeWeight(1.5);
+    if (simulationState.showPieceBorders !== false) {
+      p.stroke(255, 255, 255, 45);
+      p.strokeWeight(1.5);
+    } else {
+      p.noStroke();
+    }
 
     const verts = graphicsData.cachedVertices;
     p.beginShape();

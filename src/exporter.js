@@ -105,16 +105,18 @@ export function exportHighResolutionComposition() {
     );
 
     // 2. 輪郭線パス
-    exportGraphics.noFill();
-    exportGraphics.stroke(255, 255, 255, 40);
-    exportGraphics.strokeWeight(1.5);
-    drawOrganicShapeGeometry(
-      exportGraphics,
-      graphicsData.localVertices,
-      curvatureRatio,
-      0,
-      0,
-    );
+    if (simulationState.showPieceBorders !== false) {
+      exportGraphics.noFill();
+      exportGraphics.stroke(255, 255, 255, 40);
+      exportGraphics.strokeWeight(1.5);
+      drawOrganicShapeGeometry(
+        exportGraphics,
+        graphicsData.localVertices,
+        curvatureRatio,
+        0,
+        0,
+      );
+    }
 
     exportGraphics.pop();
   }
@@ -205,9 +207,11 @@ export function exportSvgComposition() {
     );
 
     // 輪郭線
-    svgParts.push(
-      `    <path d="${pathD}" fill="none" stroke="rgba(255, 255, 255, 0.16)" stroke-width="1.5" />`,
-    );
+    if (simulationState.showPieceBorders !== false) {
+      svgParts.push(
+        `    <path d="${pathD}" fill="none" stroke="rgba(255, 255, 255, 0.16)" stroke-width="1.5" />`,
+      );
+    }
 
     svgParts.push("  </g>");
   }

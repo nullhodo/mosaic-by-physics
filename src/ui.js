@@ -629,6 +629,12 @@ export function setupUIEventListeners() {
     markStaticLayerDirty();
   });
 
+  // ピース輪郭線 (フチ)
+  safeAddEventListener("piece-borders-checkbox", "change", (e) => {
+    simulationState.showPieceBorders = e.target.checked;
+    markStaticLayerDirty();
+  });
+
   // フィルムグレインノイズ
   safeAddEventListener("grain-checkbox", "change", (e) => {
     simulationState.isGrainActive = e.target.checked;
@@ -716,5 +722,10 @@ export function applyStateFromJsonObject(stateObj) {
     gapSlider.value = simulationState.pieceGapPercent;
     const gVal = document.getElementById("piece-gap-val");
     if (gVal) gVal.innerText = `${simulationState.pieceGapPercent}%`;
+  }
+
+  const borderToggle = document.getElementById("piece-borders-checkbox");
+  if (borderToggle && simulationState.showPieceBorders !== undefined) {
+    borderToggle.checked = simulationState.showPieceBorders;
   }
 }

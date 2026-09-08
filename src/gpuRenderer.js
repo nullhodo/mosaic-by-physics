@@ -384,16 +384,18 @@ export function renderMosaicPiecesGpu(
     }
 
     // 2. 輪郭線頂点をワールド座標に変換してパック
-    for (let e = 0; e < edgeLen; e += 2) {
-      const lx = localEdges[e] * gapScale;
-      const ly = localEdges[e + 1] * gapScale;
+    if (simulationState.showPieceBorders !== false) {
+      for (let e = 0; e < edgeLen; e += 2) {
+        const lx = localEdges[e] * gapScale;
+        const ly = localEdges[e + 1] * gapScale;
 
-      lineVertexArray[lineOffset++] = posX + lx * cosA - ly * sinA;
-      lineVertexArray[lineOffset++] = posY + lx * sinA + ly * cosA;
-      lineVertexArray[lineOffset++] = lineR;
-      lineVertexArray[lineOffset++] = lineG;
-      lineVertexArray[lineOffset++] = lineB;
-      lineVertexArray[lineOffset++] = lineA;
+        lineVertexArray[lineOffset++] = posX + lx * cosA - ly * sinA;
+        lineVertexArray[lineOffset++] = posY + lx * sinA + ly * cosA;
+        lineVertexArray[lineOffset++] = lineR;
+        lineVertexArray[lineOffset++] = lineG;
+        lineVertexArray[lineOffset++] = lineB;
+        lineVertexArray[lineOffset++] = lineA;
+      }
     }
   }
 
@@ -422,7 +424,7 @@ export function renderMosaicPiecesGpu(
   gl.drawArrays(gl.TRIANGLES, 0, fillVertexCount);
 
   // 2. 輪郭線描画 (たった1回のドローコール！)
-  if (lineVertexCount > 0) {
+  if (lineVertexCount > 0 && simulationState.showPieceBorders !== false) {
     gl.bindVertexArray(lineVao);
     gl.bindBuffer(gl.ARRAY_BUFFER, lineVbo);
     gl.bufferSubData(

@@ -15,6 +15,7 @@ export const simulationState = {
   isSineWaveSpawnActive: true,
   activePaletteIndex: 1,
   backgroundColorHex: "#dedede",
+  showPieceBorders: true,
   isGrainActive: true,
   grainIntensityPercent: 18,
   isShadowActive: false,
