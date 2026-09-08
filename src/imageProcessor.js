@@ -48,25 +48,11 @@ export const SAMPLE_IMAGES = [
     url: "./samples/red_fuji.jpg",
   },
   {
-    id: "pixel_heart",
-    title: "8-bit レトロハート",
-    artist: "Pixel Design (CC0)",
-    category: "ピクセルアート",
-    url: "./samples/pixel_heart.svg",
-  },
-  {
-    id: "pixel_invader",
-    title: "スペースインベーダー風",
-    artist: "Retro Game (CC0)",
-    category: "レトロゲーム",
-    url: "./samples/pixel_invader.svg",
-  },
-  {
-    id: "pop_cat",
-    title: "ポップ幾何学キャット",
-    artist: "Geometric Vector (CC0)",
-    category: "ポップアート",
-    url: "./samples/pop_cat.svg",
+    id: "p5_logo",
+    title: "p5.js ロゴ",
+    artist: "Processing Foundation (CC BY-NC-SA 4.0)",
+    category: "ロゴ・ブランド",
+    url: "./samples/p5_logo.svg",
   },
 ];
 
